@@ -39,26 +39,27 @@ local TabAim     = window:tab({ name = "Aim"      })
 local TabChams   = window:tab({ name = "Chams"    })
 local TabVisuals = window:tab({ name = "Visuals"  })
 local TabExploit = window:tab({ name = "Exploits" })
-local TabMisc    = window:tab({ name = "Misc"     })
+local TabPlayers = window:tab({ name = "Players"  })
 local TabCfg     = window:tab({ name = "Config"   })
 
+-- ESP
 do
     local L = TabESP:column({})
     local R = TabESP:column({})
 
     local s = L:section({ name = "Players" })
-    bind(s:addToggle({ name = "Box ESP",        flag = "e_box",        default = State.flags.esp_box           }), "esp_box")
-    bind(s:addToggle({ name = "Name",           flag = "e_name",       default = State.flags.esp_name          }), "esp_name")
-    bind(s:addToggle({ name = "Distance",       flag = "e_dist",       default = State.flags.esp_distance      }), "esp_distance")
-    bind(s:addToggle({ name = "Health Bar",     flag = "e_hp",         default = State.flags.esp_healthbar     }), "esp_healthbar")
-    bind(s:addToggle({ name = "Held Item",      flag = "e_item",       default = State.flags.esp_held_item     }), "esp_held_item")
-    bind(s:addToggle({ name = "Team Colors",    flag = "e_team",       default = State.flags.esp_team_color    }), "esp_team_color")
-    bind(s:addToggle({ name = "Hide Teammates", flag = "e_hidefriend", default = State.flags.esp_hide_friendly }), "esp_hide_friendly")
-    bind(s:addToggle({ name = "Dead Check",     flag = "e_dead",       default = State.flags.esp_dead_check    }), "esp_dead_check")
-    bind(s:addSlider({ name = "Dead Radius",    flag = "e_deadrad",    min=1,   max=20,   default=State.flags.esp_dead_radius,  interval=1,  suffix="st" }), "esp_dead_radius")
-    bind(s:addSlider({ name = "Max Distance",   flag = "e_maxdist",    min=100, max=5000, default=State.flags.esp_max_distance, interval=50, suffix="st" }), "esp_max_distance")
+    local t = bind(s:addToggle({ name = "Box ESP",        flag = "e_box",        default = State.flags.esp_box           }), "esp_box")
+    local t = bind(s:addToggle({ name = "Name",           flag = "e_name",       default = State.flags.esp_name          }), "esp_name")
+    local t = bind(s:addToggle({ name = "Distance",       flag = "e_dist",       default = State.flags.esp_distance      }), "esp_distance")
+    local t = bind(s:addToggle({ name = "Health Bar",     flag = "e_hp",         default = State.flags.esp_healthbar     }), "esp_healthbar")
+    local t = bind(s:addToggle({ name = "Held Item",      flag = "e_item",       default = State.flags.esp_held_item     }), "esp_held_item")
+    local t = bind(s:addToggle({ name = "Team Colors",    flag = "e_team",       default = State.flags.esp_team_color    }), "esp_team_color")
+    bind(s:addToggle({ name = "Hide Teammates",            flag = "e_hidefriend", default = State.flags.esp_hide_friendly }), "esp_hide_friendly")
+    bind(s:addToggle({ name = "Dead Check",                flag = "e_dead",       default = State.flags.esp_dead_check    }), "esp_dead_check")
+    bind(s:addSlider({ name = "Dead Radius",               flag = "e_deadrad",    min=1,   max=20,   default=State.flags.esp_dead_radius,  interval=1,  suffix="st" }), "esp_dead_radius")
+    bind(s:addSlider({ name = "Max Distance",              flag = "e_maxdist",    min=100, max=5000, default=State.flags.esp_max_distance, interval=50, suffix="st" }), "esp_max_distance")
 
-    local cs = L:section({ name = "Colors" })
+    local cs = R:section({ name = "Colors" })
     bindColor(cs:addLabel({ name = "Enemy"    }):addColorPicker({ flag = "ec_enemy",  color = State.colors.esp_enemy     }), "esp_enemy")
     bindColor(cs:addLabel({ name = "Friendly" }):addColorPicker({ flag = "ec_friend", color = State.colors.esp_friendly  }), "esp_friendly")
     bindColor(cs:addLabel({ name = "Distance" }):addColorPicker({ flag = "ec_dist",   color = State.colors.esp_distance  }), "esp_distance")
@@ -66,6 +67,7 @@ do
     bindColor(cs:addLabel({ name = "Health"   }):addColorPicker({ flag = "ec_hp",     color = State.colors.esp_healthbar }), "esp_healthbar")
 end
 
+-- Aim
 do
     local L = TabAim:column({})
     local R = TabAim:column({})
@@ -88,6 +90,7 @@ do
     bind(s2:addToggle({ name = "Auto Reload", flag = "ar_on",    default = State.flags.auto_reload_enabled }), "auto_reload_enabled")
 end
 
+-- Chams: Player Chams (L) | Viewmodel + Gun Chams (R)
 do
     local L = TabChams:column({})
     local R = TabChams:column({})
@@ -105,6 +108,7 @@ do
     bind(s2:addToggle({ name = "Rainbow",  flag = "vc_rb",  default = State.flags.viewmodel_chams_rainbow }), "viewmodel_chams_rainbow")
     bindColor(s2:addLabel({ name = "Color" }):addColorPicker({ flag = "vc_col", color = State.colors.viewmodel_chams }), "viewmodel_chams")
 
+    -- Gun chams under same right column
     local s3 = R:section({ name = "Gun Chams" })
     bind(s3:addToggle({  name = "Enabled",        flag = "gc_on",     default = State.flags.gun_material_enabled }), "gun_material_enabled")
     bind(s3:addDropdown({ name = "Material",      flag = "gc_mat",    items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.gun_material }), "gun_material")
@@ -115,6 +119,7 @@ do
     bindColor(s3:addLabel({ name = "Outline Color" }):addColorPicker({ flag = "gc_out_col", color = State.colors.gun_outline_color }), "gun_outline_color")
 end
 
+-- Visuals: World Chams (L) | Lighting + Tracers + Grenade (R)
 do
     local L = TabVisuals:column({})
     local R = TabVisuals:column({})
@@ -138,21 +143,21 @@ do
     bindColor(s2:addLabel({ name = "NV Tint"      }):addColorPicker({ flag = "w_nvcol", color = State.colors.night_vision_tint }), "night_vision_tint")
     bind(s2:addToggle({ name = "Thermal Vision",    flag = "w_tv",     default = State.flags.thermal_vision    }), "thermal_vision")
     bindColor(s2:addLabel({ name = "Thermal Tint"  }):addColorPicker({ flag = "w_tvcol", color = State.colors.thermal_tint      }), "thermal_tint")
+    -- Tracers inline in Lighting section
+    bind(s2:addToggle({  name = "Custom Tracers", flag = "tr_on",  default = State.flags.custom_tracers_enabled }), "custom_tracers_enabled")
+    bind(s2:addDropdown({ name = "Tracer Material", flag = "tr_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.tracer_material }), "tracer_material")
+    bind(s2:addToggle({  name = "Tracer Rainbow",   flag = "tr_rb",  default = State.flags.tracer_rainbow         }), "tracer_rainbow")
+    bindColor(s2:addLabel({ name = "Tracer Color" }):addColorPicker({ flag = "tr_col", color = State.colors.tracer_color }), "tracer_color")
 
-    local s3 = R:section({ name = "Tracers" })
-    bind(s3:addToggle({  name = "Custom Tracers", flag = "tr_on",  default = State.flags.custom_tracers_enabled }), "custom_tracers_enabled")
-    bind(s3:addDropdown({ name = "Material",      flag = "tr_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.tracer_material }), "tracer_material")
-    bind(s3:addToggle({  name = "Rainbow",        flag = "tr_rb",  default = State.flags.tracer_rainbow         }), "tracer_rainbow")
-    bindColor(s3:addLabel({ name = "Color" }):addColorPicker({ flag = "tr_col", color = State.colors.tracer_color }), "tracer_color")
-
-    local s4 = R:section({ name = "Grenade Helper" })
-    bind(s4:addToggle({  name = "Enabled",    flag = "gh_on",    default = State.flags.grenade_helper_enabled }), "grenade_helper_enabled")
-    bind(s4:addDropdown({ name = "Color Mode",flag = "gh_cmode", items = { "Solid","Rainbow" }, default = State.flags.grenade_color_mode }), "grenade_color_mode")
-    bind(s4:addDropdown({ name = "Line Style",flag = "gh_line",  items = { "Solid","Dashed"  }, default = State.flags.grenade_line_style }), "grenade_line_style")
-    bindColor(s4:addLabel({ name = "Trail Color"  }):addColorPicker({ flag = "gh_tcol", color = State.colors.grenade_trail  }), "grenade_trail")
-    bindColor(s4:addLabel({ name = "Impact Color" }):addColorPicker({ flag = "gh_icol", color = State.colors.grenade_impact }), "grenade_impact")
+    local s3 = R:section({ name = "Grenade Helper" })
+    bind(s3:addToggle({  name = "Enabled",    flag = "gh_on",    default = State.flags.grenade_helper_enabled }), "grenade_helper_enabled")
+    bind(s3:addDropdown({ name = "Color Mode",flag = "gh_cmode", items = { "Solid","Rainbow" }, default = State.flags.grenade_color_mode }), "grenade_color_mode")
+    bind(s3:addDropdown({ name = "Line Style",flag = "gh_line",  items = { "Solid","Dashed"  }, default = State.flags.grenade_line_style }), "grenade_line_style")
+    bindColor(s3:addLabel({ name = "Trail Color"  }):addColorPicker({ flag = "gh_tcol", color = State.colors.grenade_trail  }), "grenade_trail")
+    bindColor(s3:addLabel({ name = "Impact Color" }):addColorPicker({ flag = "gh_icol", color = State.colors.grenade_impact }), "grenade_impact")
 end
 
+-- Exploits
 do
     local L = TabExploit:column({})
     local R = TabExploit:column({})
@@ -177,19 +182,31 @@ do
     bindColor(s2:addLabel({ name = "Hit Effect Color" }):addColorPicker({ flag = "hf_fxcol", color = State.colors.hit_effect }), "hit_effect")
 end
 
+-- Players tab: Playerlist
 do
-    local L = TabMisc:column({})
+    local L = TabPlayers:column({})
 
-    local s = L:section({ name = "Movement" })
-    bind(s:addToggle({ name = "Custom Walkspeed", flag = "mv_ws",     default = State.flags.player_walkspeed_enabled }), "player_walkspeed_enabled")
-    bind(s:addSlider({ name = "Walkspeed",        flag = "mv_wsval",  min=4,  max=200, default=State.flags.player_walkspeed,  interval=1, suffix=" st/s" }), "player_walkspeed")
-    bind(s:addToggle({ name = "Custom Jump Power",flag = "mv_jp",     default = State.flags.player_jumppower_enabled }), "player_jumppower_enabled")
-    bind(s:addSlider({ name = "Jump Power",       flag = "mv_jpval",  min=10, max=300, default=State.flags.player_jumppower,  interval=5 }), "player_jumppower")
-    bind(s:addToggle({ name = "Infinite Jump",    flag = "mv_ijump",  default = State.flags.player_infinite_jump    }), "player_infinite_jump")
-    bind(s:addToggle({ name = "Fly",              flag = "mv_fly",    default = State.flags.player_fly_enabled      }), "player_fly_enabled")
-    bind(s:addSlider({ name = "Fly Speed",        flag = "mv_flyspd", min=10, max=300, default=State.flags.player_fly_speed, interval=5 }), "player_fly_speed")
+    local pl_section = L:section({ name = "Playerlist" })
+    local pl_list = pl_section:addList({ name = "Players", flag = "pl_selected", scale = 120 })
+
+    task.spawn(function()
+        while library.gui and library.gui.Parent do
+            if pl_list and pl_list.refresh_options then
+                local names = {}
+                local self_player = players.LocalPlayer
+                for _, p in ipairs(players:GetPlayers()) do
+                    if p ~= self_player then
+                        table.insert(names, p.Name)
+                    end
+                end
+                pcall(function() pl_list.refresh_options(names) end)
+            end
+            task.wait(3)
+        end
+    end)
 end
 
+-- Config
 do
     local L = TabCfg:column({})
     local R = TabCfg:column({})
@@ -252,25 +269,6 @@ do
             pcall(run_all_cleanup)
         end)
     end })
-
-    local pl_section = R:section({ name = "Playerlist" })
-    local pl_list = pl_section:addList({ name = "Players", flag = "pl_selected", scale = 55 })
-
-    task.spawn(function()
-        while library.gui and library.gui.Parent do
-            if pl_list and pl_list.refresh_options then
-                local names = {}
-                local self_player = players.LocalPlayer
-                for _, p in ipairs(players:GetPlayers()) do
-                    if p ~= self_player then
-                        table.insert(names, p.Name)
-                    end
-                end
-                pcall(function() pl_list.refresh_options(names) end)
-            end
-            task.wait(3)
-        end
-    end)
 end
 
 notifications:create_notification({ name = '<font color="rgb(220,50,50)">xenon</font>  loaded' })
