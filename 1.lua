@@ -3831,7 +3831,7 @@ end
 
 local window = library:window({
     name = '<font color="rgb(220,50,50)">xenon</font>  |  frontlines',
-    size = UDim2.new(0, 570, 0, 590),
+    size = UDim2.new(0, 570, 0, 620),
 })
 
 local TabESP     = window:tab({ name = "ESP"      })
@@ -3860,11 +3860,11 @@ do
     bind(s:addSlider({ name = "Max Distance",   flag = "e_maxdist",    min=100, max=5000, default=State.flags.esp_max_distance, interval=50, suffix="st" }), "esp_max_distance")
 
     local cs = L:section({ name = "Colors" })
-    bindColor(cs:addColorPicker({ name = "Enemy",    flag = "ec_enemy",  color = State.colors.esp_enemy     }), "esp_enemy")
-    bindColor(cs:addColorPicker({ name = "Friendly", flag = "ec_friend", color = State.colors.esp_friendly  }), "esp_friendly")
-    bindColor(cs:addColorPicker({ name = "Distance", flag = "ec_dist",   color = State.colors.esp_distance  }), "esp_distance")
-    bindColor(cs:addColorPicker({ name = "Dead",     flag = "ec_dead",   color = State.colors.esp_dead      }), "esp_dead")
-    bindColor(cs:addColorPicker({ name = "Health",   flag = "ec_hp",     color = State.colors.esp_healthbar }), "esp_healthbar")
+    bindColor(cs:addLabel({ name = "Enemy"    }):addColorPicker({ flag = "ec_enemy",  color = State.colors.esp_enemy     }), "esp_enemy")
+    bindColor(cs:addLabel({ name = "Friendly" }):addColorPicker({ flag = "ec_friend", color = State.colors.esp_friendly  }), "esp_friendly")
+    bindColor(cs:addLabel({ name = "Distance" }):addColorPicker({ flag = "ec_dist",   color = State.colors.esp_distance  }), "esp_distance")
+    bindColor(cs:addLabel({ name = "Dead"     }):addColorPicker({ flag = "ec_dead",   color = State.colors.esp_dead      }), "esp_dead")
+    bindColor(cs:addLabel({ name = "Health"   }):addColorPicker({ flag = "ec_hp",     color = State.colors.esp_healthbar }), "esp_healthbar")
 end
 
 do
@@ -3876,7 +3876,7 @@ do
     bind(s:addSlider({ name = "FOV",           flag = "sa_fov",    min=1, max=360, default=State.flags.silent_aim_fov,        interval=1, suffix="°" }), "silent_aim_fov")
     bind(s:addSlider({ name = "Hit Chance",    flag = "sa_chance", min=1, max=100, default=State.flags.silent_aim_hit_chance,  interval=1, suffix="%" }), "silent_aim_hit_chance")
     bind(s:addToggle({ name = "Show FOV Ring", flag = "sa_ring",   default = State.flags.silent_aim_show_fov   }), "silent_aim_show_fov")
-    bindColor(s:addColorPicker({ name = "FOV Ring Color", flag = "sa_ringcol", color = State.colors.fov_circle }), "fov_circle")
+    bindColor(s:addLabel({ name = "FOV Ring Color" }):addColorPicker({ flag = "sa_ringcol", color = State.colors.fov_circle }), "fov_circle")
     bind(s:addDropdown({ name = "Hitbox", flag = "sa_hitbox",
         items = { "Head","HumanoidRootPart","UpperTorso","LowerTorso" },
         default = State.flags.silent_aim_hitbox,
@@ -3897,32 +3897,32 @@ do
     bind(s:addToggle({ name = "Enabled", flag = "pc_on", default = State.flags.chams }), "chams")
     bind(s:addDropdown({ name = "Material", flag = "pc_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.chams_material }), "chams_material")
     bind(s:addToggle({ name = "Rainbow", flag = "pc_rb", default = State.flags.chams_rainbow }), "chams_rainbow")
-    bindColor(s:addColorPicker({ name = "Enemy Color",    flag = "pc_ecol", color = State.colors.chams_enemy    }), "chams_enemy")
-    bindColor(s:addColorPicker({ name = "Friendly Color", flag = "pc_fcol", color = State.colors.chams_friendly }), "chams_friendly")
+    bindColor(s:addLabel({ name = "Enemy Color"    }):addColorPicker({ flag = "pc_ecol", color = State.colors.chams_enemy    }), "chams_enemy")
+    bindColor(s:addLabel({ name = "Friendly Color" }):addColorPicker({ flag = "pc_fcol", color = State.colors.chams_friendly }), "chams_friendly")
 
     local s2 = L:section({ name = "Viewmodel Chams" })
     bind(s2:addToggle({ name = "Enabled", flag = "vc_on", default = State.flags.viewmodel_chams }), "viewmodel_chams")
     bind(s2:addDropdown({ name = "Material", flag = "vc_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.viewmodel_chams_material }), "viewmodel_chams_material")
     bind(s2:addToggle({ name = "Rainbow", flag = "vc_rb", default = State.flags.viewmodel_chams_rainbow }), "viewmodel_chams_rainbow")
-    bindColor(s2:addColorPicker({ name = "Color", flag = "vc_col", color = State.colors.viewmodel_chams }), "viewmodel_chams")
+    bindColor(s2:addLabel({ name = "Color" }):addColorPicker({ flag = "vc_col", color = State.colors.viewmodel_chams }), "viewmodel_chams")
 
     local s3 = R:section({ name = "World Chams" })
-    bind(s3:addToggle({ name = "Enabled",       flag = "wc_on",     default = State.flags.world_chams              }), "world_chams")
-    bind(s3:addDropdown({ name = "Mode",        flag = "wc_mode",   items = { "Fade","Solid" },                              default = State.flags.world_chams_mode     }), "world_chams_mode")
-    bind(s3:addSlider({  name = "Range",        flag = "wc_range",  min=20, max=800, default=State.flags.world_chams_range,        interval=10, suffix="st" }), "world_chams_range")
-    bind(s3:addSlider({  name = "Transparency", flag = "wc_tr",     min=0,  max=95,  default=math.floor(State.flags.world_chams_transparency*100), interval=5, suffix="%" }), "world_chams_transparency", function(v) return v/100 end)
-    bind(s3:addDropdown({ name = "Material",    flag = "wc_mat",    items = { "Glass","Neon","ForceField","SmoothPlastic" }, default = State.flags.world_chams_material }), "world_chams_material")
-    bind(s3:addToggle({  name = "Color Override",flag = "wc_col_on",default = State.flags.world_chams_color_override }), "world_chams_color_override")
-    bindColor(s3:addColorPicker({ name = "Color", flag = "wc_col", color = State.colors.world_chams_color }), "world_chams_color")
+    bind(s3:addToggle({ name = "Enabled",        flag = "wc_on",     default = State.flags.world_chams              }), "world_chams")
+    bind(s3:addDropdown({ name = "Mode",         flag = "wc_mode",   items = { "Fade","Solid" },                              default = State.flags.world_chams_mode     }), "world_chams_mode")
+    bind(s3:addSlider({  name = "Range",         flag = "wc_range",  min=20, max=800, default=State.flags.world_chams_range,        interval=10, suffix="st" }), "world_chams_range")
+    bind(s3:addSlider({  name = "Transparency",  flag = "wc_tr",     min=0,  max=95,  default=math.floor(State.flags.world_chams_transparency*100), interval=5, suffix="%" }), "world_chams_transparency", function(v) return v/100 end)
+    bind(s3:addDropdown({ name = "Material",     flag = "wc_mat",    items = { "Glass","Neon","ForceField","SmoothPlastic" }, default = State.flags.world_chams_material }), "world_chams_material")
+    bind(s3:addToggle({  name = "Color Override",flag = "wc_col_on", default = State.flags.world_chams_color_override }), "world_chams_color_override")
+    bindColor(s3:addLabel({ name = "Color" }):addColorPicker({ flag = "wc_col", color = State.colors.world_chams_color }), "world_chams_color")
 
     local s4 = R:section({ name = "Gun Chams" })
     bind(s4:addToggle({  name = "Enabled",       flag = "gc_on",     default = State.flags.gun_material_enabled }), "gun_material_enabled")
     bind(s4:addDropdown({ name = "Material",     flag = "gc_mat",    items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.gun_material }), "gun_material")
     bind(s4:addToggle({  name = "Rainbow",       flag = "gc_rb",     default = State.flags.gun_color_rainbow    }), "gun_color_rainbow")
     bind(s4:addToggle({  name = "Color Override",flag = "gc_col_on", default = State.flags.gun_color_override   }), "gun_color_override")
-    bindColor(s4:addColorPicker({ name = "Color",        flag = "gc_col",    color = State.colors.gun_color         }), "gun_color")
+    bindColor(s4:addLabel({ name = "Color"        }):addColorPicker({ flag = "gc_col",    color = State.colors.gun_color         }), "gun_color")
     bind(s4:addToggle({  name = "Outline",       flag = "gc_out_on", default = State.flags.gun_outline_enabled  }), "gun_outline_enabled")
-    bindColor(s4:addColorPicker({ name = "Outline Color",flag = "gc_out_col",color = State.colors.gun_outline_color }), "gun_outline_color")
+    bindColor(s4:addLabel({ name = "Outline Color"}):addColorPicker({ flag = "gc_out_col",color = State.colors.gun_outline_color }), "gun_outline_color")
 end
 
 do
@@ -3936,22 +3936,22 @@ do
     bind(s:addToggle({ name = "No Depth of Field", flag = "w_nodof",  default = State.flags.no_depth_of_field }), "no_depth_of_field")
     bind(s:addToggle({ name = "No Damage Blur",    flag = "w_noblur", default = State.flags.no_damage_blur    }), "no_damage_blur")
     bind(s:addToggle({ name = "Night Vision",      flag = "w_nv",     default = State.flags.night_vision      }), "night_vision")
-    bindColor(s:addColorPicker({ name = "NV Tint",     flag = "w_nvcol", color = State.colors.night_vision_tint }), "night_vision_tint")
+    bindColor(s:addLabel({ name = "NV Tint"     }):addColorPicker({ flag = "w_nvcol", color = State.colors.night_vision_tint }), "night_vision_tint")
     bind(s:addToggle({ name = "Thermal Vision",    flag = "w_tv",     default = State.flags.thermal_vision    }), "thermal_vision")
-    bindColor(s:addColorPicker({ name = "Thermal Tint",flag = "w_tvcol", color = State.colors.thermal_tint      }), "thermal_tint")
+    bindColor(s:addLabel({ name = "Thermal Tint" }):addColorPicker({ flag = "w_tvcol", color = State.colors.thermal_tint      }), "thermal_tint")
 
     local s2 = R:section({ name = "Tracers" })
     bind(s2:addToggle({  name = "Custom Tracers", flag = "tr_on",  default = State.flags.custom_tracers_enabled }), "custom_tracers_enabled")
     bind(s2:addDropdown({ name = "Material",      flag = "tr_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.tracer_material }), "tracer_material")
     bind(s2:addToggle({  name = "Rainbow",        flag = "tr_rb",  default = State.flags.tracer_rainbow         }), "tracer_rainbow")
-    bindColor(s2:addColorPicker({ name = "Color", flag = "tr_col", color = State.colors.tracer_color }), "tracer_color")
+    bindColor(s2:addLabel({ name = "Color" }):addColorPicker({ flag = "tr_col", color = State.colors.tracer_color }), "tracer_color")
 
     local s3 = R:section({ name = "Grenade Helper" })
     bind(s3:addToggle({  name = "Enabled",    flag = "gh_on",    default = State.flags.grenade_helper_enabled  }), "grenade_helper_enabled")
     bind(s3:addDropdown({ name = "Color Mode",flag = "gh_cmode", items = { "Solid","Rainbow" }, default = State.flags.grenade_color_mode }), "grenade_color_mode")
     bind(s3:addDropdown({ name = "Line Style",flag = "gh_line",  items = { "Solid","Dashed"  }, default = State.flags.grenade_line_style }), "grenade_line_style")
-    bindColor(s3:addColorPicker({ name = "Trail Color",  flag = "gh_tcol", color = State.colors.grenade_trail  }), "grenade_trail")
-    bindColor(s3:addColorPicker({ name = "Impact Color", flag = "gh_icol", color = State.colors.grenade_impact }), "grenade_impact")
+    bindColor(s3:addLabel({ name = "Trail Color"  }):addColorPicker({ flag = "gh_tcol", color = State.colors.grenade_trail  }), "grenade_trail")
+    bindColor(s3:addLabel({ name = "Impact Color" }):addColorPicker({ flag = "gh_icol", color = State.colors.grenade_impact }), "grenade_impact")
 end
 
 do
@@ -3975,7 +3975,7 @@ do
     bind(s2:addToggle({ name = "Death Sound",        flag = "hf_death", default = State.flags.death_sound_enabled }), "death_sound_enabled")
     bind(s2:addSlider({ name = "Death Volume",       flag = "hf_dvol",  min=0, max=2, default=State.flags.death_sound_volume, interval=0.05, suffix="x" }), "death_sound_volume")
     bind(s2:addToggle({ name = "Hit Effect (screen)",flag = "hf_fx",    default = State.flags.hit_effect_enabled  }), "hit_effect_enabled")
-    bindColor(s2:addColorPicker({ name = "Hit Effect Color", flag = "hf_fxcol", color = State.colors.hit_effect }), "hit_effect")
+    bindColor(s2:addLabel({ name = "Hit Effect Color" }):addColorPicker({ flag = "hf_fxcol", color = State.colors.hit_effect }), "hit_effect")
 end
 
 do
@@ -4066,7 +4066,7 @@ do
         return player_names
     end
 
-    local pl_list = pl_section:addList({ name = "Players", flag = "pl_selected", scale = 80 })
+    local pl_list = pl_section:addList({ name = "Players", flag = "pl_selected", scale = 55 })
 
     task.spawn(function()
         while library.gui and library.gui.Parent do
