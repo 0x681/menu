@@ -85,6 +85,7 @@
     local themes = {
         preset = {
             ["accent"] = hex("#DC3232"),
+            -- ["glow"] = hex("#AA55EB"), -- ignore
         }, 	
 
         utility = {
@@ -94,7 +95,7 @@
                 ["ImageColor3"] = {}, 
                 ["ScrollBarImageColor3"] = {} 
             },
-            -- UNCOMMENT THIS TO ADD GLOW (modify it yourself.)
+            -- UNCOMMENT THIS TO ADD GLOW TO YOUR UI (modify it yourself.)
             -- ["glow"] = {
             --     ["ImageColor3"] = {}, 	
             -- }, 
@@ -169,7 +170,8 @@
         getfenv().LPH_NO_VIRTUALIZE = function(...) return (...) end
     end
 
-    
+    -- -- Font importing system 
+        -- Hello skids, i dont know why you are overwriting a table and using setreadonly this is so unneccessary and removes solara support.. ;(
 
         if not isfile(library.directory .. "/fonts/main.ttf") then 
             writefile(library.directory .. "/fonts/main.ttf", game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/fs-tahoma-8px.ttf"))
@@ -192,7 +194,14 @@
         end 
         
         library.font = Font.new(getcustomasset(library.directory .. "/fonts/main_encoded.ttf"), Enum.FontWeight.Regular)
+        -- library.font = library.font
+    -- -- 
 
+    --library.font = Font.new("rbxasset://fonts/families/Zekton.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+-- 
+
+-- Library functions 
+    -- Misc functions
         function library:tween(obj, properties) 
             local tween = tween_service:Create(obj, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, false, 0), properties):Play()
                 
@@ -3784,272 +3793,6 @@
 -- 
 
 
-        -- ESP Preview (Atlanta-style viewport with live overlay)
-        function library:esp_panel()
-            local run_svc = game:GetService("RunService")
-            local lp_ref  = players.LocalPlayer
-
-            -- Standalone ScreenGui — not parented into any section
-            local sgui = library:create("ScreenGui", {
-                Parent = gethui(),
-                Name = "",
-                DisplayOrder = 10,
-                ResetOnSpawn = false,
-            })
-
-            -- Title bar (draggable)
-            local title_h = 22
-            local panel_w, panel_h = 220, 270
-
-            local outline = library:create("Frame", {
-                Parent = sgui,
-                Name = "",
-                Position = dim2(0, 900, 0, 200),
-                Size = dim2(0, panel_w, 0, panel_h),
-                BackgroundColor3 = themes.preset.outline,
-                BorderSizePixel = 0,
-                Active = true,
-            })
-
-            local inline = library:create("Frame", {
-                Parent = outline,
-                Position = dim2(0, 1, 0, 1),
-                Size = dim2(1, -2, 1, -2),
-                BackgroundColor3 = themes.preset.inline,
-                BorderSizePixel = 0,
-            })
-
-            local background = library:create("Frame", {
-                Parent = inline,
-                Position = dim2(0, 1, 0, 1),
-                Size = dim2(1, -2, 1, -2),
-                BackgroundColor3 = themes.preset.background,
-                BorderSizePixel = 0,
-            })
-
-            -- Title bar
-            local titlebar = library:create("Frame", {
-                Parent = background,
-                Size = dim2(1, 0, 0, title_h),
-                BackgroundColor3 = themes.preset.section,
-                BorderSizePixel = 0,
-            })
-
-            library:create("TextLabel", {
-                Parent = titlebar,
-                Size = dim2(1, -8, 1, 0),
-                Position = dim2(0, 6, 0, 0),
-                BackgroundTransparency = 1,
-                Text = "ESP Preview",
-                TextColor3 = themes.preset.text,
-                TextSize = 12,
-                FontFace = library.font,
-                TextXAlignment = Enum.TextXAlignment.Left,
-            })
-
-            -- Close button
-            local close_btn = library:create("TextButton", {
-                Parent = titlebar,
-                Size = dim2(0, title_h, 1, 0),
-                Position = dim2(1, -title_h, 0, 0),
-                BackgroundTransparency = 1,
-                Text = "X",
-                TextColor3 = themes.preset.text,
-                TextSize = 11,
-                FontFace = library.font,
-            })
-            close_btn.MouseButton1Click:Connect(function()
-                sgui.Enabled = false
-            end)
-
-            -- Accent line under titlebar
-            library:create("Frame", {
-                Parent = background,
-                Position = dim2(0, 0, 0, title_h),
-                Size = dim2(1, 0, 0, 1),
-                BackgroundColor3 = themes.preset.accent,
-                BorderSizePixel = 0,
-            })
-
-            -- Make the panel draggable via the titlebar
-            library:draggify(outline)
-
-            -- Viewport area below titlebar
-            local vp_top = title_h + 1
-            local vp_h   = panel_h - vp_top - 4
-
-            local vf, cam, clone_char, render_conn
-
-            local function destroy_preview()
-                if render_conn then render_conn:Disconnect(); render_conn = nil end
-                if vf          then vf:Destroy(); vf = nil end
-                if cam         then cam:Destroy(); cam = nil end
-                clone_char = nil
-            end
-
-            local function build_preview()
-                destroy_preview()
-                if not sgui.Enabled then return end
-                local char = lp_ref.Character
-                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-
-                char.Archivable = true
-                clone_char = char:Clone()
-                for _, v in ipairs(clone_char:GetDescendants()) do
-                    if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("ModuleScript") then v:Destroy() end
-                end
-                pcall(function() clone_char.Animate:Destroy() end)
-                local hum_clone = clone_char:FindFirstChildOfClass("Humanoid")
-                if hum_clone then hum_clone:ChangeState(Enum.HumanoidStateType.None) end
-
-                vf = library:create("ViewportFrame", {
-                    Parent = background,
-                    Position = dim2(0, 0, 0, vp_top),
-                    Size = dim2(1, 0, 0, vp_h),
-                    BackgroundColor3 = rgb(10, 10, 14),
-                    BackgroundTransparency = 0,
-                    BorderSizePixel = 0,
-                    LightDirection = Vector3.new(-1, -1, -1),
-                    Ambient = Color3.fromRGB(180, 180, 180),
-                })
-
-                local world_model = Instance.new("WorldModel")
-                world_model.Parent = vf
-
-                cam = library:create("Camera", {
-                    Parent = vf,
-                    FieldOfView = 50,
-                    Name = "\0",
-                })
-                vf.CurrentCamera = cam
-
-                clone_char.Parent = world_model
-                cam.CFrame = CFrame.new(Vector3.new(0, 1.5, 5), Vector3.new(0, 1.5, 0))
-
-                -- ESP overlay elements
-                local overlay = library:create("Frame", {
-                    Parent = vf,
-                    Size = dim2(0, 100, 0, 160),
-                    Position = dim2(0.5, 0, 0.5, 10),
-                    AnchorPoint = Vector2.new(0.5, 0.5),
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                })
-
-                local box_handler = library:create("Frame", {
-                    Parent = overlay,
-                    Size = dim2(1, -2, 1, -2),
-                    Position = dim2(0, 1, 0, 1),
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                })
-                local box_stroke = library:create("UIStroke", {
-                    Parent = box_handler,
-                    Color = rgb(255, 255, 255),
-                    Thickness = 1,
-                    LineJoinMode = Enum.LineJoinMode.Miter,
-                })
-                library:create("UIStroke", {
-                    Parent = overlay,
-                    Color = rgb(0, 0, 0),
-                    Thickness = 3,
-                    LineJoinMode = Enum.LineJoinMode.Miter,
-                })
-
-                local name_lbl = library:create("TextLabel", {
-                    Parent = overlay,
-                    Size = dim2(1, 0, 0, 13),
-                    Position = dim2(0, 0, 0, -16),
-                    BackgroundTransparency = 1,
-                    TextColor3 = rgb(255, 255, 255),
-                    TextStrokeTransparency = 0,
-                    TextSize = 12,
-                    FontFace = library.font,
-                    Text = lp_ref.DisplayName,
-                    TextXAlignment = Enum.TextXAlignment.Center,
-                })
-
-                local hp_hold = library:create("Frame", {
-                    Parent = overlay,
-                    Size = dim2(0, 4, 1, 0),
-                    Position = dim2(0, -7, 0, 0),
-                    AnchorPoint = Vector2.new(1, 0),
-                    BackgroundColor3 = rgb(0, 0, 0),
-                    BorderSizePixel = 0,
-                })
-                local hp_bar = library:create("Frame", {
-                    Parent = hp_hold,
-                    Size = dim2(1, -2, 0.75, -2),
-                    Position = dim2(0, 1, 0.25, 1),
-                    BackgroundColor3 = rgb(80, 220, 100),
-                    BorderSizePixel = 0,
-                })
-
-                local dist_lbl = library:create("TextLabel", {
-                    Parent = overlay,
-                    Size = dim2(1, 0, 0, 13),
-                    Position = dim2(0, 0, 1, 4),
-                    BackgroundTransparency = 1,
-                    TextColor3 = rgb(220, 220, 220),
-                    TextStrokeTransparency = 0,
-                    TextSize = 12,
-                    FontFace = library.font,
-                    Text = "127st",
-                    TextXAlignment = Enum.TextXAlignment.Center,
-                })
-
-                local weapon_lbl = library:create("TextLabel", {
-                    Parent = overlay,
-                    Size = dim2(1, 0, 0, 13),
-                    Position = dim2(0, 0, 1, 19),
-                    BackgroundTransparency = 1,
-                    TextColor3 = rgb(200, 200, 200),
-                    TextStrokeTransparency = 0,
-                    TextSize = 12,
-                    FontFace = library.font,
-                    Text = "[ AK-47 ]",
-                    TextXAlignment = Enum.TextXAlignment.Center,
-                })
-
-                local rotation = 0
-                render_conn = run_svc.RenderStepped:Connect(function(dt)
-                    rotation = rotation + 90 * dt
-                    pcall(function()
-                        clone_char:PivotTo(CFrame.new(0, 0, 0) * CFrame.Angles(0, math.rad(rotation), 0))
-                    end)
-
-                    if getgenv and getgenv().State then
-                        local f = getgenv().State.flags
-                        local c = getgenv().State.colors
-                        name_lbl.Visible     = f.esp_name
-                        dist_lbl.Visible     = f.esp_distance
-                        hp_hold.Visible      = f.esp_healthbar
-                        weapon_lbl.Visible   = f.esp_held_item
-                        box_handler.Visible  = f.esp_box
-                        if f.esp_box then box_stroke.Color = c.esp_enemy end
-                        name_lbl.TextColor3  = c.esp_enemy
-                        dist_lbl.TextColor3  = c.esp_distance
-                        if f.esp_healthbar then
-                            local pct = math.abs(math.sin(tick() * 1.2))
-                            hp_bar.Size     = UDim2.new(1, -2, pct, -2)
-                            hp_bar.Position = UDim2.new(0, 1, 1 - pct, 1)
-                            hp_bar.BackgroundColor3 = c.esp_healthbar
-                        end
-                    end
-                end)
-            end
-
-            task.defer(function() task.wait(0.5); build_preview() end)
-            lp_ref.CharacterAdded:Connect(function() task.wait(1.5); build_preview() end)
-
-            sgui:GetPropertyChangedSignal("Enabled"):Connect(function()
-                if sgui.Enabled then
-                    build_preview()
-                else
-                    destroy_preview()
-                end
-            end)
-        end
 -- library, notifications, themes remain in scope below
 
 
@@ -4151,39 +3894,35 @@ do
     local R = TabChams:column({})
 
     local s = L:section({ name = "Player Chams" })
-    local t = s:addToggle({ name = "Enabled", flag = "pc_on", default = State.flags.chams, folding = true })
-    bind(t, "chams")
-    bind(t:addDropdown({ name = "Material", flag = "pc_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.chams_material }), "chams_material")
-    bind(t:addToggle({ name = "Rainbow", flag = "pc_rb", default = State.flags.chams_rainbow }), "chams_rainbow")
-    bindColor(t:addColorPicker({ name = "Enemy Color",    flag = "pc_ecol", color = State.colors.chams_enemy    }), "chams_enemy")
-    bindColor(t:addColorPicker({ name = "Friendly Color", flag = "pc_fcol", color = State.colors.chams_friendly }), "chams_friendly")
+    bind(s:addToggle({ name = "Enabled", flag = "pc_on", default = State.flags.chams }), "chams")
+    bind(s:addDropdown({ name = "Material", flag = "pc_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.chams_material }), "chams_material")
+    bind(s:addToggle({ name = "Rainbow", flag = "pc_rb", default = State.flags.chams_rainbow }), "chams_rainbow")
+    bindColor(s:addColorPicker({ name = "Enemy Color",    flag = "pc_ecol", color = State.colors.chams_enemy    }), "chams_enemy")
+    bindColor(s:addColorPicker({ name = "Friendly Color", flag = "pc_fcol", color = State.colors.chams_friendly }), "chams_friendly")
 
     local s2 = L:section({ name = "Viewmodel Chams" })
-    local t2 = s2:addToggle({ name = "Enabled", flag = "vc_on", default = State.flags.viewmodel_chams, folding = true })
-    bind(t2, "viewmodel_chams")
-    bind(t2:addDropdown({ name = "Material", flag = "vc_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.viewmodel_chams_material }), "viewmodel_chams_material")
-    bind(t2:addToggle({ name = "Rainbow", flag = "vc_rb", default = State.flags.viewmodel_chams_rainbow }), "viewmodel_chams_rainbow")
-    bindColor(t2:addColorPicker({ name = "Color", flag = "vc_col", color = State.colors.viewmodel_chams }), "viewmodel_chams")
+    bind(s2:addToggle({ name = "Enabled", flag = "vc_on", default = State.flags.viewmodel_chams }), "viewmodel_chams")
+    bind(s2:addDropdown({ name = "Material", flag = "vc_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.viewmodel_chams_material }), "viewmodel_chams_material")
+    bind(s2:addToggle({ name = "Rainbow", flag = "vc_rb", default = State.flags.viewmodel_chams_rainbow }), "viewmodel_chams_rainbow")
+    bindColor(s2:addColorPicker({ name = "Color", flag = "vc_col", color = State.colors.viewmodel_chams }), "viewmodel_chams")
 
     local s3 = R:section({ name = "World Chams" })
-    local t3 = s3:addToggle({ name = "Enabled", flag = "wc_on", default = State.flags.world_chams, folding = true })
-    bind(t3, "world_chams")
-    bind(t3:addDropdown({ name = "Mode",          flag = "wc_mode",  items = { "Fade","Solid" },                              default = State.flags.world_chams_mode     }), "world_chams_mode")
-    bind(t3:addSlider({   name = "Range",          flag = "wc_range", min=20, max=800, default=State.flags.world_chams_range,        interval=10, suffix="st" }), "world_chams_range")
-    bind(t3:addSlider({   name = "Transparency",   flag = "wc_tr",    min=0,  max=95,  default=math.floor(State.flags.world_chams_transparency*100), interval=5, suffix="%" }), "world_chams_transparency", function(v) return v/100 end)
-    bind(t3:addDropdown({ name = "Material",       flag = "wc_mat",   items = { "Glass","Neon","ForceField","SmoothPlastic" }, default = State.flags.world_chams_material }), "world_chams_material")
-    bind(t3:addToggle({   name = "Color Override", flag = "wc_col_on",default = State.flags.world_chams_color_override }), "world_chams_color_override")
-    bindColor(t3:addColorPicker({ name = "Color",  flag = "wc_col",   color = State.colors.world_chams_color }), "world_chams_color")
+    bind(s3:addToggle({ name = "Enabled",       flag = "wc_on",     default = State.flags.world_chams              }), "world_chams")
+    bind(s3:addDropdown({ name = "Mode",        flag = "wc_mode",   items = { "Fade","Solid" },                              default = State.flags.world_chams_mode     }), "world_chams_mode")
+    bind(s3:addSlider({  name = "Range",        flag = "wc_range",  min=20, max=800, default=State.flags.world_chams_range,        interval=10, suffix="st" }), "world_chams_range")
+    bind(s3:addSlider({  name = "Transparency", flag = "wc_tr",     min=0,  max=95,  default=math.floor(State.flags.world_chams_transparency*100), interval=5, suffix="%" }), "world_chams_transparency", function(v) return v/100 end)
+    bind(s3:addDropdown({ name = "Material",    flag = "wc_mat",    items = { "Glass","Neon","ForceField","SmoothPlastic" }, default = State.flags.world_chams_material }), "world_chams_material")
+    bind(s3:addToggle({  name = "Color Override",flag = "wc_col_on",default = State.flags.world_chams_color_override }), "world_chams_color_override")
+    bindColor(s3:addColorPicker({ name = "Color", flag = "wc_col", color = State.colors.world_chams_color }), "world_chams_color")
 
     local s4 = R:section({ name = "Gun Chams" })
-    local t4 = s4:addToggle({ name = "Enabled", flag = "gc_on", default = State.flags.gun_material_enabled, folding = true })
-    bind(t4, "gun_material_enabled")
-    bind(t4:addDropdown({ name = "Material",       flag = "gc_mat",    items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.gun_material         }), "gun_material")
-    bind(t4:addToggle({   name = "Rainbow",        flag = "gc_rb",     default = State.flags.gun_color_rainbow  }), "gun_color_rainbow")
-    bind(t4:addToggle({   name = "Color Override", flag = "gc_col_on", default = State.flags.gun_color_override }), "gun_color_override")
-    bindColor(t4:addColorPicker({ name = "Color",         flag = "gc_col",    color = State.colors.gun_color         }), "gun_color")
-    bind(t4:addToggle({   name = "Outline",        flag = "gc_out_on", default = State.flags.gun_outline_enabled }), "gun_outline_enabled")
-    bindColor(t4:addColorPicker({ name = "Outline Color", flag = "gc_out_col",color = State.colors.gun_outline_color }), "gun_outline_color")
+    bind(s4:addToggle({  name = "Enabled",       flag = "gc_on",     default = State.flags.gun_material_enabled }), "gun_material_enabled")
+    bind(s4:addDropdown({ name = "Material",     flag = "gc_mat",    items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.gun_material }), "gun_material")
+    bind(s4:addToggle({  name = "Rainbow",       flag = "gc_rb",     default = State.flags.gun_color_rainbow    }), "gun_color_rainbow")
+    bind(s4:addToggle({  name = "Color Override",flag = "gc_col_on", default = State.flags.gun_color_override   }), "gun_color_override")
+    bindColor(s4:addColorPicker({ name = "Color",        flag = "gc_col",    color = State.colors.gun_color         }), "gun_color")
+    bind(s4:addToggle({  name = "Outline",       flag = "gc_out_on", default = State.flags.gun_outline_enabled  }), "gun_outline_enabled")
+    bindColor(s4:addColorPicker({ name = "Outline Color",flag = "gc_out_col",color = State.colors.gun_outline_color }), "gun_outline_color")
 end
 
 do
@@ -4196,27 +3935,23 @@ do
     bind(s:addToggle({ name = "No Atmosphere",     flag = "w_noatm",  default = State.flags.no_atmosphere     }), "no_atmosphere")
     bind(s:addToggle({ name = "No Depth of Field", flag = "w_nodof",  default = State.flags.no_depth_of_field }), "no_depth_of_field")
     bind(s:addToggle({ name = "No Damage Blur",    flag = "w_noblur", default = State.flags.no_damage_blur    }), "no_damage_blur")
-    local nv = s:addToggle({ name = "Night Vision",   flag = "w_nv", default = State.flags.night_vision,   folding = true })
-    bind(nv, "night_vision")
-    bindColor(nv:addColorPicker({ name = "NV Tint",      flag = "w_nvcol", color = State.colors.night_vision_tint }), "night_vision_tint")
-    local tv = s:addToggle({ name = "Thermal Vision", flag = "w_tv", default = State.flags.thermal_vision, folding = true })
-    bind(tv, "thermal_vision")
-    bindColor(tv:addColorPicker({ name = "Thermal Tint", flag = "w_tvcol", color = State.colors.thermal_tint      }), "thermal_tint")
+    bind(s:addToggle({ name = "Night Vision",      flag = "w_nv",     default = State.flags.night_vision      }), "night_vision")
+    bindColor(s:addColorPicker({ name = "NV Tint",     flag = "w_nvcol", color = State.colors.night_vision_tint }), "night_vision_tint")
+    bind(s:addToggle({ name = "Thermal Vision",    flag = "w_tv",     default = State.flags.thermal_vision    }), "thermal_vision")
+    bindColor(s:addColorPicker({ name = "Thermal Tint",flag = "w_tvcol", color = State.colors.thermal_tint      }), "thermal_tint")
 
     local s2 = R:section({ name = "Tracers" })
-    local tr = s2:addToggle({ name = "Custom Tracers", flag = "tr_on", default = State.flags.custom_tracers_enabled, folding = true })
-    bind(tr, "custom_tracers_enabled")
-    bind(tr:addDropdown({ name = "Material", flag = "tr_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.tracer_material }), "tracer_material")
-    bind(tr:addToggle({   name = "Rainbow",  flag = "tr_rb",  default = State.flags.tracer_rainbow }), "tracer_rainbow")
-    bindColor(tr:addColorPicker({ name = "Color", flag = "tr_col", color = State.colors.tracer_color }), "tracer_color")
+    bind(s2:addToggle({  name = "Custom Tracers", flag = "tr_on",  default = State.flags.custom_tracers_enabled }), "custom_tracers_enabled")
+    bind(s2:addDropdown({ name = "Material",      flag = "tr_mat", items = { "Neon","Glass","ForceField","SmoothPlastic" }, default = State.flags.tracer_material }), "tracer_material")
+    bind(s2:addToggle({  name = "Rainbow",        flag = "tr_rb",  default = State.flags.tracer_rainbow         }), "tracer_rainbow")
+    bindColor(s2:addColorPicker({ name = "Color", flag = "tr_col", color = State.colors.tracer_color }), "tracer_color")
 
     local s3 = R:section({ name = "Grenade Helper" })
-    local gh = s3:addToggle({ name = "Enabled", flag = "gh_on", default = State.flags.grenade_helper_enabled, folding = true })
-    bind(gh, "grenade_helper_enabled")
-    bind(gh:addDropdown({ name = "Color Mode", flag = "gh_cmode", items = { "Solid","Rainbow" }, default = State.flags.grenade_color_mode }), "grenade_color_mode")
-    bind(gh:addDropdown({ name = "Line Style", flag = "gh_line",  items = { "Solid","Dashed"  }, default = State.flags.grenade_line_style }), "grenade_line_style")
-    bindColor(gh:addColorPicker({ name = "Trail Color",  flag = "gh_tcol", color = State.colors.grenade_trail  }), "grenade_trail")
-    bindColor(gh:addColorPicker({ name = "Impact Color", flag = "gh_icol", color = State.colors.grenade_impact }), "grenade_impact")
+    bind(s3:addToggle({  name = "Enabled",    flag = "gh_on",    default = State.flags.grenade_helper_enabled  }), "grenade_helper_enabled")
+    bind(s3:addDropdown({ name = "Color Mode",flag = "gh_cmode", items = { "Solid","Rainbow" }, default = State.flags.grenade_color_mode }), "grenade_color_mode")
+    bind(s3:addDropdown({ name = "Line Style",flag = "gh_line",  items = { "Solid","Dashed"  }, default = State.flags.grenade_line_style }), "grenade_line_style")
+    bindColor(s3:addColorPicker({ name = "Trail Color",  flag = "gh_tcol", color = State.colors.grenade_trail  }), "grenade_trail")
+    bindColor(s3:addColorPicker({ name = "Impact Color", flag = "gh_icol", color = State.colors.grenade_impact }), "grenade_impact")
 end
 
 do
@@ -4224,26 +3959,22 @@ do
     local R = TabExploit:column({})
 
     local s = L:section({ name = "Weapon" })
-    bind(s:addToggle({ name = "No Spread",      flag = "wx_spread", default = State.flags.weapon_no_spread    }), "weapon_no_spread")
-    bind(s:addToggle({ name = "No Recoil",      flag = "wx_recoil", default = State.flags.weapon_no_recoil   }), "weapon_no_recoil")
-    bind(s:addToggle({ name = "No Sway",        flag = "wx_sway",   default = State.flags.weapon_no_sway     }), "weapon_no_sway")
-    bind(s:addToggle({ name = "Instant ADS",    flag = "wx_ads",    default = State.flags.weapon_instant_ads }), "weapon_instant_ads")
-    local rf = s:addToggle({ name = "Rapid Fire",     flag = "wx_rf",    default = State.flags.weapon_rapid_fire,           folding = true })
-    bind(rf, "weapon_rapid_fire")
-    bind(rf:addSlider({ name = "Fire Rate",     flag = "wx_rfmult", min=1, max=10, default=State.flags.weapon_rapid_fire_mult,    interval=0.5, suffix="x" }), "weapon_rapid_fire_mult")
-    bind(s:addToggle({ name = "Extended Range", flag = "wx_range",  default = State.flags.weapon_extended_range       }), "weapon_extended_range")
-    local em = s:addToggle({ name = "Extended Melee", flag = "wx_melee", default = State.flags.weapon_extended_melee_range, folding = true })
-    bind(em, "weapon_extended_melee_range")
-    bind(em:addSlider({ name = "Melee Mult",    flag = "wx_melmult",min=1, max=10, default=State.flags.weapon_extended_melee_mult, interval=0.5, suffix="x" }), "weapon_extended_melee_mult")
+    bind(s:addToggle({ name = "No Spread",      flag = "wx_spread", default = State.flags.weapon_no_spread         }), "weapon_no_spread")
+    bind(s:addToggle({ name = "No Recoil",      flag = "wx_recoil", default = State.flags.weapon_no_recoil         }), "weapon_no_recoil")
+    bind(s:addToggle({ name = "No Sway",        flag = "wx_sway",   default = State.flags.weapon_no_sway           }), "weapon_no_sway")
+    bind(s:addToggle({ name = "Instant ADS",    flag = "wx_ads",    default = State.flags.weapon_instant_ads       }), "weapon_instant_ads")
+    bind(s:addToggle({ name = "Rapid Fire",     flag = "wx_rf",     default = State.flags.weapon_rapid_fire        }), "weapon_rapid_fire")
+    bind(s:addSlider({ name = "Fire Rate",      flag = "wx_rfmult", min=1, max=10, default=State.flags.weapon_rapid_fire_mult,    interval=0.5, suffix="x" }), "weapon_rapid_fire_mult")
+    bind(s:addToggle({ name = "Extended Range", flag = "wx_range",  default = State.flags.weapon_extended_range    }), "weapon_extended_range")
+    bind(s:addToggle({ name = "Extended Melee", flag = "wx_melee",  default = State.flags.weapon_extended_melee_range }), "weapon_extended_melee_range")
+    bind(s:addSlider({ name = "Melee Mult",     flag = "wx_melmult",min=1, max=10, default=State.flags.weapon_extended_melee_mult, interval=0.5, suffix="x" }), "weapon_extended_melee_mult")
 
     local s2 = R:section({ name = "Hit Feedback" })
-    local hs = s2:addToggle({ name = "Hit Sound",   flag = "hf_hit",   default = State.flags.hit_sound_enabled,   folding = true })
-    bind(hs, "hit_sound_enabled")
-    bind(hs:addSlider({ name = "Volume", flag = "hf_hvol",  min=0, max=2, default=State.flags.hit_sound_volume,   interval=0.05, suffix="x" }), "hit_sound_volume")
-    local ds = s2:addToggle({ name = "Death Sound", flag = "hf_death", default = State.flags.death_sound_enabled, folding = true })
-    bind(ds, "death_sound_enabled")
-    bind(ds:addSlider({ name = "Volume", flag = "hf_dvol",  min=0, max=2, default=State.flags.death_sound_volume, interval=0.05, suffix="x" }), "death_sound_volume")
-    bind(s2:addToggle({ name = "Hit Effect (screen)", flag = "hf_fx",  default = State.flags.hit_effect_enabled }), "hit_effect_enabled")
+    bind(s2:addToggle({ name = "Hit Sound",          flag = "hf_hit",   default = State.flags.hit_sound_enabled   }), "hit_sound_enabled")
+    bind(s2:addSlider({ name = "Hit Volume",         flag = "hf_hvol",  min=0, max=2, default=State.flags.hit_sound_volume,   interval=0.05, suffix="x" }), "hit_sound_volume")
+    bind(s2:addToggle({ name = "Death Sound",        flag = "hf_death", default = State.flags.death_sound_enabled }), "death_sound_enabled")
+    bind(s2:addSlider({ name = "Death Volume",       flag = "hf_dvol",  min=0, max=2, default=State.flags.death_sound_volume, interval=0.05, suffix="x" }), "death_sound_volume")
+    bind(s2:addToggle({ name = "Hit Effect (screen)",flag = "hf_fx",    default = State.flags.hit_effect_enabled  }), "hit_effect_enabled")
     bindColor(s2:addColorPicker({ name = "Hit Effect Color", flag = "hf_fxcol", color = State.colors.hit_effect }), "hit_effect")
 end
 
@@ -4251,16 +3982,13 @@ do
     local L = TabMisc:column({})
 
     local s = L:section({ name = "Movement" })
-    local ws_ = s:addToggle({ name = "Custom Walkspeed", flag = "mv_ws",  default = State.flags.player_walkspeed_enabled, folding = true })
-    bind(ws_, "player_walkspeed_enabled")
-    bind(ws_:addSlider({ name = "Walkspeed",  flag = "mv_wsval",  min=4,  max=200, default=State.flags.player_walkspeed,  interval=1, suffix=" st/s" }), "player_walkspeed")
-    local jp = s:addToggle({ name = "Custom Jump Power", flag = "mv_jp",  default = State.flags.player_jumppower_enabled, folding = true })
-    bind(jp, "player_jumppower_enabled")
-    bind(jp:addSlider({ name = "Jump Power", flag = "mv_jpval",  min=10, max=300, default=State.flags.player_jumppower,  interval=5 }), "player_jumppower")
-    bind(s:addToggle({ name = "Infinite Jump", flag = "mv_ijump", default = State.flags.player_infinite_jump }), "player_infinite_jump")
-    local fly = s:addToggle({ name = "Fly", flag = "mv_fly", default = State.flags.player_fly_enabled, folding = true })
-    bind(fly, "player_fly_enabled")
-    bind(fly:addSlider({ name = "Fly Speed", flag = "mv_flyspd", min=10, max=300, default=State.flags.player_fly_speed, interval=5 }), "player_fly_speed")
+    bind(s:addToggle({ name = "Custom Walkspeed", flag = "mv_ws",    default = State.flags.player_walkspeed_enabled }), "player_walkspeed_enabled")
+    bind(s:addSlider({ name = "Walkspeed",        flag = "mv_wsval", min=4,  max=200, default=State.flags.player_walkspeed,  interval=1, suffix=" st/s" }), "player_walkspeed")
+    bind(s:addToggle({ name = "Custom Jump Power",flag = "mv_jp",    default = State.flags.player_jumppower_enabled }), "player_jumppower_enabled")
+    bind(s:addSlider({ name = "Jump Power",       flag = "mv_jpval", min=10, max=300, default=State.flags.player_jumppower,  interval=5 }), "player_jumppower")
+    bind(s:addToggle({ name = "Infinite Jump",    flag = "mv_ijump", default = State.flags.player_infinite_jump    }), "player_infinite_jump")
+    bind(s:addToggle({ name = "Fly",              flag = "mv_fly",   default = State.flags.player_fly_enabled      }), "player_fly_enabled")
+    bind(s:addSlider({ name = "Fly Speed",        flag = "mv_flyspd",min=10, max=300, default=State.flags.player_fly_speed, interval=5 }), "player_fly_speed")
 end
 
 do
@@ -4338,7 +4066,7 @@ do
         return player_names
     end
 
-    local pl_list = pl_section:addList({ name = "Players", flag = "pl_selected", scale = 120 })
+    local pl_list = pl_section:addList({ name = "Players", flag = "pl_selected", scale = 80 })
 
     task.spawn(function()
         while library.gui and library.gui.Parent do
@@ -4349,7 +4077,5 @@ do
         end
     end)
 end
-
-library:esp_panel()
 
 notifications:create_notification({ name = '<font color="rgb(220,50,50)">xenon</font>  loaded' })
