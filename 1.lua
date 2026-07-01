@@ -85,7 +85,6 @@
     local themes = {
         preset = {
             ["accent"] = hex("#DC3232"),
-            -- ["glow"] = hex("#AA55EB"), -- ignore
         }, 	
 
         utility = {
@@ -95,7 +94,7 @@
                 ["ImageColor3"] = {}, 
                 ["ScrollBarImageColor3"] = {} 
             },
-            -- UNCOMMENT THIS TO ADD GLOW TO YOUR UI (modify it yourself.)
+            -- UNCOMMENT THIS TO ADD GLOW (modify it yourself.)
             -- ["glow"] = {
             --     ["ImageColor3"] = {}, 	
             -- }, 
@@ -170,8 +169,7 @@
         getfenv().LPH_NO_VIRTUALIZE = function(...) return (...) end
     end
 
-    -- -- Font importing system 
-        -- Hello skids, i dont know why you are overwriting a table and using setreadonly this is so unneccessary and removes solara support.. ;(
+    
 
         if not isfile(library.directory .. "/fonts/main.ttf") then 
             writefile(library.directory .. "/fonts/main.ttf", game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/fs-tahoma-8px.ttf"))
@@ -194,14 +192,7 @@
         end 
         
         library.font = Font.new(getcustomasset(library.directory .. "/fonts/main_encoded.ttf"), Enum.FontWeight.Regular)
-        -- library.font = library.font
-    -- -- 
 
-    --library.font = Font.new("rbxasset://fonts/families/Zekton.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
--- 
-
--- Library functions 
-    -- Misc functions
         function library:tween(obj, properties) 
             local tween = tween_service:Create(obj, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, false, 0), properties):Play()
                 
@@ -3733,7 +3724,7 @@
                 LineHeight = 1.75;
                 TextColor3 = rgb(255, 255, 255);
                 BorderColor3 = rgb(0, 0, 0);
-                Text = string.format("[ fecurity.lua ] %s", cfg.name);
+                Text = string.format("[ xenon.lua ] %s", cfg.name);
                 AutomaticSize = Enum.AutomaticSize.XY;
                 Size = dim2(1, -4, 1, 0);
                 Position = dim2(0, 4, 0, -2);
@@ -3794,71 +3785,134 @@
 
 
         -- ESP Preview (Atlanta-style viewport with live overlay)
-        function library:addESPPreview()
+        function library:esp_panel()
             local run_svc = game:GetService("RunService")
             local lp_ref  = players.LocalPlayer
 
-            -- Outer wrapper sized to fit inside the section
-            local wrapper = library:create("Frame", {
-                Parent = self.background or self.elements,
+            -- Standalone ScreenGui — not parented into any section
+            local sgui = library:create("ScreenGui", {
+                Parent = gethui(),
                 Name = "",
-                Size = dim2(1, -8, 0, 220),
-                BackgroundColor3 = rgb(10, 10, 14),
-                BackgroundTransparency = 0,
-                BorderSizePixel = 0,
-                ZIndex = 3,
+                DisplayOrder = 10,
+                ResetOnSpawn = false,
             })
 
-            -- Cache frame — elements parented here are invisible (Atlanta pattern)
-            local cache = library:create("Frame", {
-                Parent = wrapper,
+            -- Title bar (draggable)
+            local title_h = 22
+            local panel_w, panel_h = 220, 270
+
+            local outline = library:create("Frame", {
+                Parent = sgui,
                 Name = "",
-                Size = dim2(0, 0, 0, 0),
-                BackgroundTransparency = 1,
-                Visible = false,
+                Position = dim2(0, 900, 0, 200),
+                Size = dim2(0, panel_w, 0, panel_h),
+                BackgroundColor3 = themes.preset.outline,
+                BorderSizePixel = 0,
+                Active = true,
             })
+
+            local inline = library:create("Frame", {
+                Parent = outline,
+                Position = dim2(0, 1, 0, 1),
+                Size = dim2(1, -2, 1, -2),
+                BackgroundColor3 = themes.preset.inline,
+                BorderSizePixel = 0,
+            })
+
+            local background = library:create("Frame", {
+                Parent = inline,
+                Position = dim2(0, 1, 0, 1),
+                Size = dim2(1, -2, 1, -2),
+                BackgroundColor3 = themes.preset.background,
+                BorderSizePixel = 0,
+            })
+
+            -- Title bar
+            local titlebar = library:create("Frame", {
+                Parent = background,
+                Size = dim2(1, 0, 0, title_h),
+                BackgroundColor3 = themes.preset.section,
+                BorderSizePixel = 0,
+            })
+
+            library:create("TextLabel", {
+                Parent = titlebar,
+                Size = dim2(1, -8, 1, 0),
+                Position = dim2(0, 6, 0, 0),
+                BackgroundTransparency = 1,
+                Text = "ESP Preview",
+                TextColor3 = themes.preset.text,
+                TextSize = 12,
+                FontFace = library.font,
+                TextXAlignment = Enum.TextXAlignment.Left,
+            })
+
+            -- Close button
+            local close_btn = library:create("TextButton", {
+                Parent = titlebar,
+                Size = dim2(0, title_h, 1, 0),
+                Position = dim2(1, -title_h, 0, 0),
+                BackgroundTransparency = 1,
+                Text = "X",
+                TextColor3 = themes.preset.text,
+                TextSize = 11,
+                FontFace = library.font,
+            })
+            close_btn.MouseButton1Click:Connect(function()
+                sgui.Enabled = false
+            end)
+
+            -- Accent line under titlebar
+            library:create("Frame", {
+                Parent = background,
+                Position = dim2(0, 0, 0, title_h),
+                Size = dim2(1, 0, 0, 1),
+                BackgroundColor3 = themes.preset.accent,
+                BorderSizePixel = 0,
+            })
+
+            -- Make the panel draggable via the titlebar
+            library:draggify(outline)
+
+            -- Viewport area below titlebar
+            local vp_top = title_h + 1
+            local vp_h   = panel_h - vp_top - 4
 
             local vf, cam, clone_char, render_conn
 
             local function destroy_preview()
                 if render_conn then render_conn:Disconnect(); render_conn = nil end
-                if vf          then vf:Destroy();  vf  = nil end
+                if vf          then vf:Destroy(); vf = nil end
                 if cam         then cam:Destroy(); cam = nil end
                 clone_char = nil
             end
 
             local function build_preview()
                 destroy_preview()
+                if not sgui.Enabled then return end
                 local char = lp_ref.Character
                 if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
                 char.Archivable = true
                 clone_char = char:Clone()
-                -- strip scripts/animate so the clone stays in idle pose
                 for _, v in ipairs(clone_char:GetDescendants()) do
-                    if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("ModuleScript") then
-                        v:Destroy()
-                    end
+                    if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("ModuleScript") then v:Destroy() end
                 end
                 pcall(function() clone_char.Animate:Destroy() end)
-                -- freeze humanoid so it doesn't fall
                 local hum_clone = clone_char:FindFirstChildOfClass("Humanoid")
-                if hum_clone then
-                    hum_clone:ChangeState(Enum.HumanoidStateType.None)
-                end
+                if hum_clone then hum_clone:ChangeState(Enum.HumanoidStateType.None) end
 
                 vf = library:create("ViewportFrame", {
-                    Parent = wrapper,
-                    Size = dim2(1, 0, 1, 0),
+                    Parent = background,
+                    Position = dim2(0, 0, 0, vp_top),
+                    Size = dim2(1, 0, 0, vp_h),
                     BackgroundColor3 = rgb(10, 10, 14),
                     BackgroundTransparency = 0,
                     BorderSizePixel = 0,
-                    ZIndex = 3,
                     LightDirection = Vector3.new(-1, -1, -1),
                     Ambient = Color3.fromRGB(180, 180, 180),
                 })
 
-                -- WorldModel is required for the character to render properly in ViewportFrame
                 local world_model = Instance.new("WorldModel")
                 world_model.Parent = vf
 
@@ -3869,36 +3923,19 @@
                 })
                 vf.CurrentCamera = cam
 
-                -- place character at world origin inside the WorldModel
                 clone_char.Parent = world_model
-                local hrp = clone_char:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    hrp.CFrame = CFrame.new(0, 0, 0)
-                end
+                cam.CFrame = CFrame.new(Vector3.new(0, 1.5, 5), Vector3.new(0, 1.5, 0))
 
-                -- position camera to frame the character: slightly above, angled down, 5 studs back
-                local cam_cf = CFrame.new(Vector3.new(0, 1.5, 5), Vector3.new(0, 1.5, 0))
-                cam.CFrame = cam_cf
-
-                -- Overlay holder (matches Atlanta object["holder"] sizing)
+                -- ESP overlay elements
                 local overlay = library:create("Frame", {
                     Parent = vf,
-                    Size = dim2(0, 135, 0, 190),
+                    Size = dim2(0, 100, 0, 160),
                     Position = dim2(0.5, 0, 0.5, 10),
                     AnchorPoint = Vector2.new(0.5, 0.5),
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
                 })
 
-                -- Outer black box stroke
-                local box_outline = library:create("UIStroke", {
-                    Parent = overlay,
-                    Color = rgb(0, 0, 0),
-                    Thickness = 3,
-                    LineJoinMode = Enum.LineJoinMode.Miter,
-                })
-
-                -- Inner colored box
                 local box_handler = library:create("Frame", {
                     Parent = overlay,
                     Size = dim2(1, -2, 1, -2),
@@ -3906,21 +3943,24 @@
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
                 })
-
                 local box_stroke = library:create("UIStroke", {
                     Parent = box_handler,
                     Color = rgb(255, 255, 255),
                     Thickness = 1,
                     LineJoinMode = Enum.LineJoinMode.Miter,
                 })
+                library:create("UIStroke", {
+                    Parent = overlay,
+                    Color = rgb(0, 0, 0),
+                    Thickness = 3,
+                    LineJoinMode = Enum.LineJoinMode.Miter,
+                })
 
-                -- Name label
                 local name_lbl = library:create("TextLabel", {
                     Parent = overlay,
-                    Size = dim2(1, 0, 0, 14),
-                    Position = dim2(0, 0, 0, -18),
+                    Size = dim2(1, 0, 0, 13),
+                    Position = dim2(0, 0, 0, -16),
                     BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
                     TextColor3 = rgb(255, 255, 255),
                     TextStrokeTransparency = 0,
                     TextSize = 12,
@@ -3929,7 +3969,6 @@
                     TextXAlignment = Enum.TextXAlignment.Center,
                 })
 
-                -- Health bar holder
                 local hp_hold = library:create("Frame", {
                     Parent = overlay,
                     Size = dim2(0, 4, 1, 0),
@@ -3938,7 +3977,6 @@
                     BackgroundColor3 = rgb(0, 0, 0),
                     BorderSizePixel = 0,
                 })
-
                 local hp_bar = library:create("Frame", {
                     Parent = hp_hold,
                     Size = dim2(1, -2, 0.75, -2),
@@ -3947,13 +3985,11 @@
                     BorderSizePixel = 0,
                 })
 
-                -- Distance label
                 local dist_lbl = library:create("TextLabel", {
                     Parent = overlay,
-                    Size = dim2(1, 0, 0, 14),
-                    Position = dim2(0, 0, 1, 5),
+                    Size = dim2(1, 0, 0, 13),
+                    Position = dim2(0, 0, 1, 4),
                     BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
                     TextColor3 = rgb(220, 220, 220),
                     TextStrokeTransparency = 0,
                     TextSize = 12,
@@ -3962,13 +3998,11 @@
                     TextXAlignment = Enum.TextXAlignment.Center,
                 })
 
-                -- Weapon label
                 local weapon_lbl = library:create("TextLabel", {
                     Parent = overlay,
-                    Size = dim2(1, 0, 0, 14),
-                    Position = dim2(0, 0, 1, 21),
+                    Size = dim2(1, 0, 0, 13),
+                    Position = dim2(0, 0, 1, 19),
                     BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
                     TextColor3 = rgb(200, 200, 200),
                     TextStrokeTransparency = 0,
                     TextSize = 12,
@@ -3978,37 +4012,24 @@
                 })
 
                 local rotation = 0
-
                 render_conn = run_svc.RenderStepped:Connect(function(dt)
-                    rotation = rotation + 90 * dt  -- 90 degrees/sec spin
+                    rotation = rotation + 90 * dt
                     pcall(function()
-                        local hrp2 = clone_char:FindFirstChild("HumanoidRootPart")
-                        if hrp2 then
-                            hrp2.CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(0, math.rad(rotation), 0)
-                            -- move all other parts relative to hrp pivot
-                            clone_char:PivotTo(CFrame.new(0, 0, 0) * CFrame.Angles(0, math.rad(rotation), 0))
-                        end
+                        clone_char:PivotTo(CFrame.new(0, 0, 0) * CFrame.Angles(0, math.rad(rotation), 0))
                     end)
 
-                    -- Live flag-driven visibility + colors
                     if getgenv and getgenv().State then
                         local f = getgenv().State.flags
                         local c = getgenv().State.colors
-                        name_lbl.Visible      = f.esp_name
-                        dist_lbl.Visible      = f.esp_distance
-                        hp_hold.Visible       = f.esp_healthbar
-                        weapon_lbl.Visible    = f.esp_held_item
-                        box_handler.Visible   = f.esp_box
-                        box_outline.Visible   = f.esp_box
-                        if f.esp_box then
-                            box_stroke.Color  = c.esp_enemy
-                        end
-                        name_lbl.TextColor3   = c.esp_enemy
-                        dist_lbl.TextColor3   = c.esp_distance
-
-                        -- animate health bar
-                        local hum = clone_char and clone_char:FindFirstChildOfClass("Humanoid")
-                        if hum and f.esp_healthbar then
+                        name_lbl.Visible     = f.esp_name
+                        dist_lbl.Visible     = f.esp_distance
+                        hp_hold.Visible      = f.esp_healthbar
+                        weapon_lbl.Visible   = f.esp_held_item
+                        box_handler.Visible  = f.esp_box
+                        if f.esp_box then box_stroke.Color = c.esp_enemy end
+                        name_lbl.TextColor3  = c.esp_enemy
+                        dist_lbl.TextColor3  = c.esp_distance
+                        if f.esp_healthbar then
                             local pct = math.abs(math.sin(tick() * 1.2))
                             hp_bar.Size     = UDim2.new(1, -2, pct, -2)
                             hp_bar.Position = UDim2.new(0, 1, 1 - pct, 1)
@@ -4018,17 +4039,16 @@
                 end)
             end
 
-            task.defer(function()
-                task.wait(0.5)
-                build_preview()
-            end)
+            task.defer(function() task.wait(0.5); build_preview() end)
+            lp_ref.CharacterAdded:Connect(function() task.wait(1.5); build_preview() end)
 
-            lp_ref.CharacterAdded:Connect(function()
-                task.wait(1.5)
-                build_preview()
+            sgui:GetPropertyChangedSignal("Enabled"):Connect(function()
+                if sgui.Enabled then
+                    build_preview()
+                else
+                    destroy_preview()
+                end
             end)
-
-            return setmetatable({}, library)
         end
 -- library, notifications, themes remain in scope below
 
@@ -4102,10 +4122,6 @@ do
     bindColor(cs:addColorPicker({ name = "Distance", flag = "ec_dist",   color = State.colors.esp_distance  }), "esp_distance")
     bindColor(cs:addColorPicker({ name = "Dead",     flag = "ec_dead",   color = State.colors.esp_dead      }), "esp_dead")
     bindColor(cs:addColorPicker({ name = "Health",   flag = "ec_hp",     color = State.colors.esp_healthbar }), "esp_healthbar")
-
-    -- ESP preview (right column, fill=true so it stretches to match left)
-    local ps = R:section({ name = "ESP Preview", size = UDim2.new(1,0,1,-12) })
-    ps:addESPPreview()
 end
 
 do
@@ -4333,5 +4349,7 @@ do
         end
     end)
 end
+
+library:esp_panel()
 
 notifications:create_notification({ name = '<font color="rgb(220,50,50)">xenon</font>  loaded' })
