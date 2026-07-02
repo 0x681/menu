@@ -43,6 +43,7 @@ local function bindColor(elem, key)
     return elem
 end
 
+-- ── ESP ──────────────────────────────────────────────────────────────────────
 do
     local LeftGB = Tabs.ESP:AddLeftGroupbox("Players")
     bind(LeftGB:AddToggle("e_box",        { Text = "Box ESP",        Default = false }), "esp_box")
@@ -78,6 +79,7 @@ do
     bindColor(ec_hp:AddColorPicker("ec_hp",      { Default = State.colors.esp_healthbar }), "esp_healthbar_color")
 end
 
+-- ── AIM ──────────────────────────────────────────────────────────────────────
 do
     local LeftGB = Tabs.Aim:AddLeftGroupbox("Silent Aim")
     bind(LeftGB:AddToggle("sa_on",     { Text = "Enabled",       Default = false }), "silent_aim_enabled")
@@ -98,6 +100,7 @@ do
     bind(RightGB:AddToggle("ar_on",    { Text = "Auto Reload", Default = false }), "auto_reload_enabled")
 end
 
+-- ── CHAMS ─────────────────────────────────────────────────────────────────────
 do
     local LeftGB = Tabs.Chams:AddLeftGroupbox("Player Chams")
     bind(LeftGB:AddToggle("pc_on",  { Text = "Enabled",  Default = false }), "chams")
@@ -140,6 +143,7 @@ do
     bindColor(gc_out:AddColorPicker("gc_out_col", { Default = State.colors.gun_outline_color }), "gun_outline_color")
 end
 
+-- ── VISUALS ───────────────────────────────────────────────────────────────────
 do
     local LeftGB = Tabs.Visuals:AddLeftGroupbox("World Chams")
     bind(LeftGB:AddToggle("wc_on",   { Text = "Enabled",       Default = false }), "world_chams")
@@ -172,6 +176,7 @@ do
     bindColor(tv:AddColorPicker("w_tvcol", { Default = State.colors.thermal_tint }), "thermal_tint")
 end
 
+-- ── VISUALS 2 (Tracers & Grenades) ───────────────────────────────────────────
 do
     local LeftGB = Tabs.Visuals:AddLeftGroupbox("Tracers")
     bind(LeftGB:AddToggle("tr_on",  { Text = "Enabled",  Default = false }), "custom_tracers_enabled")
@@ -202,6 +207,7 @@ do
     bindColor(gh_impact:AddColorPicker("gh_icol", { Default = State.colors.grenade_impact }), "grenade_impact")
 end
 
+-- ── EXPLOITS ──────────────────────────────────────────────────────────────────
 do
     local LeftGB = Tabs.Exploits:AddLeftGroupbox("Weapon")
     bind(LeftGB:AddToggle("wx_spread",  { Text = "No Spread",      Default = false }), "weapon_no_spread")
@@ -224,6 +230,7 @@ do
     bindColor(hf_fx:AddColorPicker("hf_fxcol", { Default = State.colors.hit_effect }), "hit_effect")
 end
 
+-- ── PLAYERS ───────────────────────────────────────────────────────────────────
 do
     local LeftGB = Tabs.Players:AddLeftGroupbox("Playerlist")
     local player_names = {}
@@ -313,16 +320,18 @@ do
     getgenv().Xenon_priority  = priority_list
 end
 
+-- ── CONFIG ────────────────────────────────────────────────────────────────────
 do
     local LeftGB = Tabs.Config:AddLeftGroupbox("Configurations")
     local cfg_selected = ""
     LeftGB:AddInput("cfg_name", { Text = "Config Name", Default = "" })
 
+    local cfg_dir = "xenon/configs"
+    pcall(function() if not isfolder(cfg_dir) then makefolder(cfg_dir) end end)
+
     local cfg_list = {}
     local function refresh_configs()
         cfg_list = {}
-        local cfg_dir = Library.FolderName .. "/configs"
-        pcall(function() if not isfolder(cfg_dir) then makefolder(cfg_dir) end end)
         local ok, files = pcall(listfiles, cfg_dir)
         if ok and files then
             for _, f in ipairs(files) do
@@ -338,7 +347,6 @@ do
         Func = function()
             local cfg_name = Library.Flags.cfg_name or ""
             if cfg_name == "" then notify("Enter a config name") return end
-            local cfg_dir = Library.FolderName .. "/configs"
             pcall(function() if not isfolder(cfg_dir) then makefolder(cfg_dir) end end)
             Library:AttemptSave()
             notify("Created: " .. cfg_name)
@@ -368,7 +376,6 @@ do
         Text = "Delete",
         Func = function()
             if cfg_selected == "" then notify("Select a config") return end
-            local cfg_dir = Library.FolderName .. "/configs"
             pcall(delfile, cfg_dir .. "/" .. cfg_selected .. ".cfg")
             notify("Deleted: " .. cfg_selected)
             refresh_configs()
