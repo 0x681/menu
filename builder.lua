@@ -1,27 +1,36 @@
-local library, themes = loadstring(game:HttpGet("https://raw.githubusercontent.com/i77lhm/Libraries/refs/heads/main/Atlanta/Library.lua"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/GhostDuckyy/UI-Libraries/main/LinoriaLib/source.lua"))()
 
 local State   = getgenv().State
 local players = game:GetService("Players")
-local flags   = library.flags
 
 local whitelist     = {}
 local priority_list = {}
 
 local function notify(msg)
-    pcall(function() library:notification({ text = msg, time = 3 }) end)
+    pcall(function() Library:Notify(msg, 3) end)
 end
 
-for index, value in themes.preset do
-    pcall(function() library:update_theme(index, value) end)
-end
-library:update_theme("accent", Color3.fromRGB(220, 50, 50))
+local Window = Library:CreateWindow({
+    Title = "xenon  |  frontlines",
+    Position = UDim2.fromOffset(175, 50),
+    Size = UDim2.fromOffset(570, 620),
+    Center = false,
+})
+
+local TabESP     = Window:AddTab("ESP")
+local TabAim     = Window:AddTab("Aim")
+local TabChams   = Window:AddTab("Chams")
+local TabVisuals = Window:AddTab("Visuals")
+local TabExploit = Window:AddTab("Exploits")
+local TabPlayers = Window:AddTab("Players")
+local TabCfg     = Window:AddTab("Config")
 
 local function bind(elem, key, transform)
     if not elem then return elem end
-    local cb = elem.callback
-    elem.callback = function(v)
+    local orig_cb = elem.Callback
+    elem.Callback = function(v)
         State.flags[key] = transform and transform(v) or v
-        if cb then cb(v) end
+        if orig_cb then orig_cb(v) end
         pcall(getgenv().Xenon_AimSync)
     end
     return elem
@@ -29,409 +38,393 @@ end
 
 local function bindColor(elem, key)
     if not elem then return elem end
-    local cb = elem.callback
-    elem.callback = function(c, a)
+    local orig_cb = elem.Callback
+    elem.Callback = function(c)
         State.colors[key] = c
-        if cb then cb(c, a) end
+        if orig_cb then orig_cb(c) end
     end
     return elem
 end
 
-local window = library:window({
-    name = "xenon  |  frontlines",
-    size = UDim2.new(0, 570, 0, 620),
-})
-
-local TabESP     = window:tab({ name = "ESP"      })
-local TabAim     = window:tab({ name = "Aim"      })
-local TabChams   = window:tab({ name = "Chams"    })
-local TabVisuals = window:tab({ name = "Visuals"  })
-local TabExploit = window:tab({ name = "Exploits" })
-local TabPlayers = window:tab({ name = "Players"  })
-local TabCfg     = window:tab({ name = "Config"   })
-
--- ── ESP ──────────────────────────────────────────────────────────────────────
 do
-    local colL = TabESP:column()
-    local colR = TabESP:column()
+    local GroupPlayers = TabESP:AddGroupbox("Players")
+    bind(GroupPlayers:AddToggle("e_box",        { Text = "Box ESP",        Default = false }), "esp_box")
+    bind(GroupPlayers:AddToggle("e_name",       { Text = "Name",           Default = false }), "esp_name")
+    bind(GroupPlayers:AddToggle("e_dist",       { Text = "Distance",       Default = false }), "esp_distance")
+    bind(GroupPlayers:AddToggle("e_hp",         { Text = "Health Bar",     Default = false }), "esp_healthbar")
+    bind(GroupPlayers:AddToggle("e_item",       { Text = "Held Item",      Default = false }), "esp_held_item")
+    bind(GroupPlayers:AddToggle("e_team",       { Text = "Team Colors",    Default = false }), "esp_team_color")
+    bind(GroupPlayers:AddToggle("e_hidefriend", { Text = "Hide Teammates", Default = false }), "esp_hide_friendly")
+    bind(GroupPlayers:AddToggle("e_dead",       { Text = "Dead Check",     Default = false }), "esp_dead_check")
+    bind(GroupPlayers:AddSlider("e_deadrad",    { Text = "Dead Radius",    Default = 3,    Min = 1,   Max = 20,   Rounding = 0 }), "esp_dead_radius")
+    bind(GroupPlayers:AddSlider("e_maxdist",    { Text = "Max Distance",   Default = 2000, Min = 100, Max = 5000, Rounding = 0 }), "esp_max_distance")
 
-    local s = colL:section({ name = "Players", toggle = false })
-    bind(s:toggle({ name = "Box ESP",        flag = "e_box",        default = false }), "esp_box")
-    bind(s:toggle({ name = "Name",           flag = "e_name",       default = false }), "esp_name")
-    bind(s:toggle({ name = "Distance",       flag = "e_dist",       default = false }), "esp_distance")
-    bind(s:toggle({ name = "Health Bar",     flag = "e_hp",         default = false }), "esp_healthbar")
-    bind(s:toggle({ name = "Held Item",      flag = "e_item",       default = false }), "esp_held_item")
-    bind(s:toggle({ name = "Team Colors",    flag = "e_team",       default = false }), "esp_team_color")
-    bind(s:toggle({ name = "Hide Teammates", flag = "e_hidefriend", default = false }), "esp_hide_friendly")
-    bind(s:toggle({ name = "Dead Check",     flag = "e_dead",       default = false }), "esp_dead_check")
-    bind(s:slider({ name = "Dead Radius",    flag = "e_deadrad",  min = 1,   max = 20,   default = 3,    interval = 1,  suffix = "st" }), "esp_dead_radius")
-    bind(s:slider({ name = "Max Distance",   flag = "e_maxdist",  min = 100, max = 5000, default = 2000, interval = 50, suffix = "st" }), "esp_max_distance")
+    local GroupColors = TabESP:AddGroupbox("Colors")
+    local ec_enemy = GroupColors:AddToggle("ec_ecol_on",  { Text = "Enemy Color",    Default = false })
+    bind(ec_enemy, "esp_box")
+    bindColor(ec_enemy:AddColorPicker("ec_enemy",   { Default = State.colors.esp_enemy }), "esp_enemy")
 
-    local cs = colR:section({ name = "Colors", toggle = false })
-    bindColor(cs:toggle({ name = "Enemy Color",    flag = "ec_ecol_on",    default = false })
-        :colorpicker({ flag = "ec_enemy",   color = State.colors.esp_enemy      }), "esp_enemy")
-    bindColor(cs:toggle({ name = "Friendly Color", flag = "ec_fcol_on",    default = false })
-        :colorpicker({ flag = "ec_friend",  color = State.colors.esp_friendly   }), "esp_friendly")
-    bindColor(cs:toggle({ name = "Distance Color", flag = "ec_dcol_on",    default = false })
-        :colorpicker({ flag = "ec_dist",    color = State.colors.esp_distance   }), "esp_distance_color")
-    bindColor(cs:toggle({ name = "Dead Color",     flag = "ec_deadcol_on", default = false })
-        :colorpicker({ flag = "ec_dead",    color = State.colors.esp_dead       }), "esp_dead")
-    bindColor(cs:toggle({ name = "Health Color",   flag = "ec_hpcol_on",   default = false })
-        :colorpicker({ flag = "ec_hp",      color = State.colors.esp_healthbar  }), "esp_healthbar_color")
+    local ec_friend = GroupColors:AddToggle("ec_fcol_on", { Text = "Friendly Color", Default = false })
+    bind(ec_friend, "esp_box")
+    bindColor(ec_friend:AddColorPicker("ec_friend",  { Default = State.colors.esp_friendly }), "esp_friendly")
+
+    local ec_dist = GroupColors:AddToggle("ec_dcol_on",   { Text = "Distance Color", Default = false })
+    bind(ec_dist, "esp_box")
+    bindColor(ec_dist:AddColorPicker("ec_dist",    { Default = State.colors.esp_distance }), "esp_distance_color")
+
+    local ec_dead = GroupColors:AddToggle("ec_deadcol_on",{ Text = "Dead Color",     Default = false })
+    bind(ec_dead, "esp_box")
+    bindColor(ec_dead:AddColorPicker("ec_dead",    { Default = State.colors.esp_dead }), "esp_dead")
+
+    local ec_hp = GroupColors:AddToggle("ec_hpcol_on",    { Text = "Health Color",   Default = false })
+    bind(ec_hp, "esp_box")
+    bindColor(ec_hp:AddColorPicker("ec_hp",      { Default = State.colors.esp_healthbar }), "esp_healthbar_color")
 end
 
--- ── AIM ──────────────────────────────────────────────────────────────────────
 do
-    local colL = TabAim:column()
-    local colR = TabAim:column()
-
-    local s = colL:section({ name = "Silent Aim", toggle = false })
-    bind(s:toggle({ name = "Enabled",    flag = "sa_on",     default = false }), "silent_aim_enabled")
-    bind(s:slider({ name = "FOV",        flag = "sa_fov",    min = 1, max = 360, default = 180, interval = 1, suffix = "°" }), "silent_aim_fov")
-    bind(s:slider({ name = "Hit Chance", flag = "sa_chance", min = 1, max = 100, default = 100, interval = 1, suffix = "%" }), "silent_aim_hit_chance")
-    local fov_ring = s:toggle({ name = "Show FOV Ring", flag = "sa_ring", default = false })
+    local GroupSilent = TabAim:AddGroupbox("Silent Aim")
+    bind(GroupSilent:AddToggle("sa_on",     { Text = "Enabled",       Default = false }), "silent_aim_enabled")
+    bind(GroupSilent:AddSlider("sa_fov",    { Text = "FOV",           Default = 180, Min = 1, Max = 360, Rounding = 0 }), "silent_aim_fov")
+    bind(GroupSilent:AddSlider("sa_chance", { Text = "Hit Chance",    Default = 100, Min = 1, Max = 100, Rounding = 0 }), "silent_aim_hit_chance")
+    local fov_ring = GroupSilent:AddToggle("sa_ring", { Text = "Show FOV Ring", Default = false })
     bind(fov_ring, "silent_aim_show_fov")
-    bindColor(fov_ring:colorpicker({ flag = "sa_ringcol", color = State.colors.fov_circle }), "fov_circle")
-    bind(s:dropdown({ name = "Hitbox", flag = "sa_hitbox",
-        items   = { "Head", "HumanoidRootPart", "UpperTorso", "LowerTorso" },
-        default = "Head",
+    bindColor(fov_ring:AddColorPicker("sa_ringcol", { Default = State.colors.fov_circle }), "fov_circle")
+    bind(GroupSilent:AddDropdown("sa_hitbox", {
+        Text = "Hitbox",
+        Values = { "Head", "HumanoidRootPart", "UpperTorso", "LowerTorso" },
+        Default = "Head",
     }), "silent_aim_hitbox")
 
-    local s2 = colR:section({ name = "Combat", toggle = false })
-    bind(s2:toggle({ name = "Kill Aura",   flag = "ka_on",    default = false }), "kill_aura_enabled")
-    bind(s2:slider({ name = "Aura Range",  flag = "ka_range", min = 5, max = 60, default = 12, interval = 1, suffix = "st" }), "kill_aura_range")
-    bind(s2:toggle({ name = "Auto Shoot",  flag = "as_on",    default = false }), "auto_shoot_enabled")
-    bind(s2:toggle({ name = "Auto Reload", flag = "ar_on",    default = false }), "auto_reload_enabled")
+    local GroupCombat = TabAim:AddGroupbox("Combat")
+    bind(GroupCombat:AddToggle("ka_on",    { Text = "Kill Aura",   Default = false }), "kill_aura_enabled")
+    bind(GroupCombat:AddSlider("ka_range", { Text = "Aura Range",  Default = 12, Min = 5, Max = 60, Rounding = 0 }), "kill_aura_range")
+    bind(GroupCombat:AddToggle("as_on",    { Text = "Auto Shoot",  Default = false }), "auto_shoot_enabled")
+    bind(GroupCombat:AddToggle("ar_on",    { Text = "Auto Reload", Default = false }), "auto_reload_enabled")
 end
 
--- ── CHAMS ─────────────────────────────────────────────────────────────────────
 do
-    local colL = TabChams:column()
-    local colR = TabChams:column()
+    local GroupPlayer = TabChams:AddGroupbox("Player Chams")
+    bind(GroupPlayer:AddToggle("pc_on",  { Text = "Enabled",  Default = false }), "chams")
+    bind(GroupPlayer:AddDropdown("pc_mat", {
+        Text = "Material",
+        Values = { "Neon", "Glass", "ForceField", "SmoothPlastic" },
+        Default = "Neon",
+    }), "chams_material")
+    bind(GroupPlayer:AddToggle("pc_rb",  { Text = "Rainbow",  Default = false }), "chams_rainbow")
+    local pc_ecol = GroupPlayer:AddToggle("pc_ecol_on", { Text = "Enemy Color",    Default = false })
+    bind(pc_ecol, "chams")
+    bindColor(pc_ecol:AddColorPicker("pc_ecol", { Default = State.colors.chams_enemy }), "chams_enemy")
+    local pc_fcol = GroupPlayer:AddToggle("pc_fcol_on", { Text = "Friendly Color", Default = false })
+    bind(pc_fcol, "chams")
+    bindColor(pc_fcol:AddColorPicker("pc_fcol", { Default = State.colors.chams_friendly }), "chams_friendly")
 
-    local s = colL:section({ name = "Player Chams", toggle = false })
-    bind(s:toggle({   name = "Enabled",  flag = "pc_on",  default = false }), "chams")
-    bind(s:dropdown({ name = "Material", flag = "pc_mat",
-        items = { "Neon", "Glass", "ForceField", "SmoothPlastic" }, default = "Neon" }), "chams_material")
-    bind(s:toggle({   name = "Rainbow",  flag = "pc_rb",  default = false }), "chams_rainbow")
-    bindColor(s:toggle({ name = "Enemy Color",    flag = "pc_ecol_on", default = false })
-        :colorpicker({ flag = "pc_ecol", color = State.colors.chams_enemy    }), "chams_enemy")
-    bindColor(s:toggle({ name = "Friendly Color", flag = "pc_fcol_on", default = false })
-        :colorpicker({ flag = "pc_fcol", color = State.colors.chams_friendly }), "chams_friendly")
+    local GroupViewmodel = TabChams:AddGroupbox("Viewmodel Chams")
+    bind(GroupViewmodel:AddToggle("vc_on",  { Text = "Enabled",  Default = false }), "viewmodel_chams")
+    bind(GroupViewmodel:AddDropdown("vc_mat", {
+        Text = "Material",
+        Values = { "Neon", "Glass", "ForceField", "SmoothPlastic" },
+        Default = "Neon",
+    }), "viewmodel_chams_material")
+    bind(GroupViewmodel:AddToggle("vc_rb",  { Text = "Rainbow",  Default = false }), "viewmodel_chams_rainbow")
+    local vc_col = GroupViewmodel:AddToggle("vc_col_on", { Text = "Color", Default = false })
+    bind(vc_col, "viewmodel_chams")
+    bindColor(vc_col:AddColorPicker("vc_col", { Default = State.colors.viewmodel_chams }), "viewmodel_chams")
 
-    local s2 = colR:section({ name = "Viewmodel Chams", toggle = false })
-    bind(s2:toggle({   name = "Enabled",  flag = "vc_on",  default = false }), "viewmodel_chams")
-    bind(s2:dropdown({ name = "Material", flag = "vc_mat",
-        items = { "Neon", "Glass", "ForceField", "SmoothPlastic" }, default = "Neon" }), "viewmodel_chams_material")
-    bind(s2:toggle({   name = "Rainbow",  flag = "vc_rb",  default = false }), "viewmodel_chams_rainbow")
-    bindColor(s2:toggle({ name = "Color", flag = "vc_col_on", default = false })
-        :colorpicker({ flag = "vc_col", color = State.colors.viewmodel_chams }), "viewmodel_chams")
-
-    local s3 = colR:section({ name = "Gun Chams", toggle = false })
-    bind(s3:toggle({   name = "Enabled",  flag = "gc_on",  default = false }), "gun_material_enabled")
-    bind(s3:dropdown({ name = "Material", flag = "gc_mat",
-        items = { "Neon", "Glass", "ForceField", "SmoothPlastic" }, default = "Neon" }), "gun_material")
-    bind(s3:toggle({   name = "Rainbow",  flag = "gc_rb",  default = false }), "gun_color_rainbow")
-    local gc_col_t = s3:toggle({ name = "Color Override", flag = "gc_col_on", default = false })
-    do
-        local cb = gc_col_t.callback
-        gc_col_t.callback = function(v)
-            State.flags.gun_color_override = v
-            if cb then cb(v) end
-            pcall(getgenv().Xenon_AimSync)
-        end
-    end
-    bindColor(gc_col_t:colorpicker({ flag = "gc_col", color = State.colors.gun_color }), "gun_color")
-    local gc_out_t = s3:toggle({ name = "Outline", flag = "gc_out_on", default = false })
-    do
-        local cb = gc_out_t.callback
-        gc_out_t.callback = function(v)
-            State.flags.gun_outline_enabled = v
-            if cb then cb(v) end
-            pcall(getgenv().Xenon_AimSync)
-        end
-    end
-    bindColor(gc_out_t:colorpicker({ flag = "gc_out_col", color = State.colors.gun_outline_color }), "gun_outline_color")
+    local GroupGun = TabChams:AddGroupbox("Gun Chams")
+    bind(GroupGun:AddToggle("gc_on",  { Text = "Enabled",  Default = false }), "gun_material_enabled")
+    bind(GroupGun:AddDropdown("gc_mat", {
+        Text = "Material",
+        Values = { "Neon", "Glass", "ForceField", "SmoothPlastic" },
+        Default = "Neon",
+    }), "gun_material")
+    bind(GroupGun:AddToggle("gc_rb",  { Text = "Rainbow",  Default = false }), "gun_color_rainbow")
+    local gc_col = GroupGun:AddToggle("gc_col_on", { Text = "Color Override", Default = false })
+    bind(gc_col, "gun_color_override")
+    bindColor(gc_col:AddColorPicker("gc_col", { Default = State.colors.gun_color }), "gun_color")
+    local gc_out = GroupGun:AddToggle("gc_out_on", { Text = "Outline", Default = false })
+    bind(gc_out, "gun_outline_enabled")
+    bindColor(gc_out:AddColorPicker("gc_out_col", { Default = State.colors.gun_outline_color }), "gun_outline_color")
 end
 
--- ── VISUALS ───────────────────────────────────────────────────────────────────
 do
-    local colL = TabVisuals:column()
-    local colR = TabVisuals:column()
-
-    local s = colL:section({ name = "World Chams", toggle = false })
-    bind(s:toggle({   name = "Enabled",      flag = "wc_on",   default = false }), "world_chams")
-    bind(s:dropdown({ name = "Mode",         flag = "wc_mode",
-        items = { "Fade", "Solid" }, default = "Fade" }), "world_chams_mode")
-    bind(s:slider({   name = "Range",        flag = "wc_range", min = 20, max = 800, default = 200, interval = 10, suffix = "st" }), "world_chams_range")
-    bind(s:slider({   name = "Transparency", flag = "wc_tr",    min = 0,  max = 95,  default = 60,  interval = 5,  suffix = "%" }),
+    local GroupWorld = TabVisuals:AddGroupbox("World Chams")
+    bind(GroupWorld:AddToggle("wc_on",   { Text = "Enabled",       Default = false }), "world_chams")
+    bind(GroupWorld:AddDropdown("wc_mode", {
+        Text = "Mode",
+        Values = { "Fade", "Solid" },
+        Default = "Fade",
+    }), "world_chams_mode")
+    bind(GroupWorld:AddSlider("wc_range", { Text = "Range",        Default = 200, Min = 20, Max = 800, Rounding = 0 }), "world_chams_range")
+    bind(GroupWorld:AddSlider("wc_tr",    { Text = "Transparency", Default = 60,  Min = 0,  Max = 95,  Rounding = 0 }),
         "world_chams_transparency", function(v) return v / 100 end)
-    bind(s:dropdown({ name = "Material",     flag = "wc_mat",
-        items = { "Glass", "Neon", "ForceField", "SmoothPlastic" }, default = "Glass" }), "world_chams_material")
-    bindColor(s:toggle({ name = "Color Override", flag = "wc_col_on", default = false })
-        :colorpicker({ flag = "wc_col", color = State.colors.world_chams_color }), "world_chams_color")
+    bind(GroupWorld:AddDropdown("wc_mat", {
+        Text = "Material",
+        Values = { "Glass", "Neon", "ForceField", "SmoothPlastic" },
+        Default = "Glass",
+    }), "world_chams_material")
+    local wc_col = GroupWorld:AddToggle("wc_col_on", { Text = "Color Override", Default = false })
+    bind(wc_col, "world_chams_color_override")
+    bindColor(wc_col:AddColorPicker("wc_col", { Default = State.colors.world_chams_color }), "world_chams_color")
 
-    local s2 = colL:section({ name = "Lighting", toggle = false })
-    bind(s2:toggle({ name = "No Fog",            flag = "w_nofog",  default = false }), "no_fog")
-    bind(s2:toggle({ name = "Bright Lighting",   flag = "w_bright", default = false }), "bright_lighting")
-    bind(s2:toggle({ name = "No Atmosphere",     flag = "w_noatm",  default = false }), "no_atmosphere")
-    bind(s2:toggle({ name = "No Depth of Field", flag = "w_nodof",  default = false }), "no_depth_of_field")
-    bind(s2:toggle({ name = "No Damage Blur",    flag = "w_noblur", default = false }), "no_damage_blur")
-    local nv = s2:toggle({ name = "Night Vision",  flag = "w_nv", default = false })
+    local GroupLight = TabVisuals:AddGroupbox("Lighting")
+    bind(GroupLight:AddToggle("w_nofog",  { Text = "No Fog",            Default = false }), "no_fog")
+    bind(GroupLight:AddToggle("w_bright", { Text = "Bright Lighting",   Default = false }), "bright_lighting")
+    bind(GroupLight:AddToggle("w_noatm",  { Text = "No Atmosphere",     Default = false }), "no_atmosphere")
+    bind(GroupLight:AddToggle("w_nodof",  { Text = "No Depth of Field", Default = false }), "no_depth_of_field")
+    bind(GroupLight:AddToggle("w_noblur", { Text = "No Damage Blur",    Default = false }), "no_damage_blur")
+    local nv = GroupLight:AddToggle("w_nv", { Text = "Night Vision",  Default = false })
     bind(nv, "night_vision")
-    bindColor(nv:colorpicker({ flag = "w_nvcol", color = State.colors.night_vision_tint }), "night_vision_tint")
-    local tv = s2:toggle({ name = "Thermal Vision", flag = "w_tv", default = false })
+    bindColor(nv:AddColorPicker("w_nvcol", { Default = State.colors.night_vision_tint }), "night_vision_tint")
+    local tv = GroupLight:AddToggle("w_tv", { Text = "Thermal Vision", Default = false })
     bind(tv, "thermal_vision")
-    bindColor(tv:colorpicker({ flag = "w_tvcol", color = State.colors.thermal_tint }), "thermal_tint")
+    bindColor(tv:AddColorPicker("w_tvcol", { Default = State.colors.thermal_tint }), "thermal_tint")
 
-    local s3 = colR:section({ name = "Tracers", toggle = false })
-    bind(s3:toggle({   name = "Enabled",  flag = "tr_on",     default = false }), "custom_tracers_enabled")
-    bind(s3:dropdown({ name = "Material", flag = "tr_mat",
-        items = { "Neon", "Glass", "ForceField", "SmoothPlastic" }, default = "Neon" }), "tracer_material")
-    bind(s3:toggle({   name = "Rainbow",  flag = "tr_rb",     default = false }), "tracer_rainbow")
-    bindColor(s3:toggle({ name = "Color", flag = "tr_col_on", default = false })
-        :colorpicker({ flag = "tr_col", color = State.colors.tracer_color }), "tracer_color")
+    local GroupTracers = TabVisuals:AddGroupbox("Tracers")
+    bind(GroupTracers:AddToggle("tr_on",  { Text = "Enabled",  Default = false }), "custom_tracers_enabled")
+    bind(GroupTracers:AddDropdown("tr_mat", {
+        Text = "Material",
+        Values = { "Neon", "Glass", "ForceField", "SmoothPlastic" },
+        Default = "Neon",
+    }), "tracer_material")
+    bind(GroupTracers:AddToggle("tr_rb",  { Text = "Rainbow",  Default = false }), "tracer_rainbow")
+    local tr_col = GroupTracers:AddToggle("tr_col_on", { Text = "Color", Default = false })
+    bind(tr_col, "custom_tracers_enabled")
+    bindColor(tr_col:AddColorPicker("tr_col", { Default = State.colors.tracer_color }), "tracer_color")
 
-    local s4 = colR:section({ name = "Grenade Helper", toggle = false })
-    bind(s4:toggle({   name = "Enabled",    flag = "gh_on",    default = true  }), "grenade_helper_enabled")
-    bind(s4:dropdown({ name = "Color Mode", flag = "gh_cmode",
-        items = { "Solid", "Rainbow" }, default = "Solid" }), "grenade_color_mode")
-    bind(s4:dropdown({ name = "Line Style", flag = "gh_line",
-        items = { "Solid", "Dashed"  }, default = "Solid" }), "grenade_line_style")
-    bindColor(s4:toggle({ name = "Trail Color",  flag = "gh_tcol_on", default = false })
-        :colorpicker({ flag = "gh_tcol", color = State.colors.grenade_trail  }), "grenade_trail")
-    bindColor(s4:toggle({ name = "Impact Color", flag = "gh_icol_on", default = false })
-        :colorpicker({ flag = "gh_icol", color = State.colors.grenade_impact }), "grenade_impact")
+    local GroupGrenade = TabVisuals:AddGroupbox("Grenade Helper")
+    bind(GroupGrenade:AddToggle("gh_on",     { Text = "Enabled",    Default = true  }), "grenade_helper_enabled")
+    bind(GroupGrenade:AddDropdown("gh_cmode", {
+        Text = "Color Mode",
+        Values = { "Solid", "Rainbow" },
+        Default = "Solid",
+    }), "grenade_color_mode")
+    bind(GroupGrenade:AddDropdown("gh_line", {
+        Text = "Line Style",
+        Values = { "Solid", "Dashed" },
+        Default = "Solid",
+    }), "grenade_line_style")
+    local gh_trail = GroupGrenade:AddToggle("gh_tcol_on", { Text = "Trail Color",  Default = false })
+    bind(gh_trail, "grenade_helper_enabled")
+    bindColor(gh_trail:AddColorPicker("gh_tcol", { Default = State.colors.grenade_trail }), "grenade_trail")
+    local gh_impact = GroupGrenade:AddToggle("gh_icol_on", { Text = "Impact Color", Default = false })
+    bind(gh_impact, "grenade_helper_enabled")
+    bindColor(gh_impact:AddColorPicker("gh_icol", { Default = State.colors.grenade_impact }), "grenade_impact")
 end
 
--- ── EXPLOITS ──────────────────────────────────────────────────────────────────
 do
-    local colL = TabExploit:column()
-    local colR = TabExploit:column()
+    local GroupWeapon = TabExploit:AddGroupbox("Weapon")
+    bind(GroupWeapon:AddToggle("wx_spread",  { Text = "No Spread",      Default = false }), "weapon_no_spread")
+    bind(GroupWeapon:AddToggle("wx_recoil",  { Text = "No Recoil",      Default = false }), "weapon_no_recoil")
+    bind(GroupWeapon:AddToggle("wx_sway",    { Text = "No Sway",        Default = false }), "weapon_no_sway")
+    bind(GroupWeapon:AddToggle("wx_ads",     { Text = "Instant ADS",    Default = false }), "weapon_instant_ads")
+    bind(GroupWeapon:AddToggle("wx_rf",      { Text = "Rapid Fire",     Default = false }), "weapon_rapid_fire")
+    bind(GroupWeapon:AddSlider("wx_rfmult",  { Text = "Fire Rate Mult", Default = 2, Min = 1, Max = 10, Rounding = 1 }), "weapon_rapid_fire_mult")
+    bind(GroupWeapon:AddToggle("wx_range",   { Text = "Extended Range", Default = false }), "weapon_extended_range")
+    bind(GroupWeapon:AddToggle("wx_melee",   { Text = "Extended Melee", Default = false }), "weapon_extended_melee_range")
+    bind(GroupWeapon:AddSlider("wx_melmult", { Text = "Melee Mult",     Default = 3, Min = 1, Max = 10, Rounding = 1 }), "weapon_extended_melee_mult")
 
-    local s = colL:section({ name = "Weapon", toggle = false })
-    bind(s:toggle({ name = "No Spread",      flag = "wx_spread",  default = false }), "weapon_no_spread")
-    bind(s:toggle({ name = "No Recoil",      flag = "wx_recoil",  default = false }), "weapon_no_recoil")
-    bind(s:toggle({ name = "No Sway",        flag = "wx_sway",    default = false }), "weapon_no_sway")
-    bind(s:toggle({ name = "Instant ADS",    flag = "wx_ads",     default = false }), "weapon_instant_ads")
-    bind(s:toggle({ name = "Rapid Fire",     flag = "wx_rf",      default = false }), "weapon_rapid_fire")
-    bind(s:slider({ name = "Fire Rate Mult", flag = "wx_rfmult",  min = 1, max = 10, default = 2, interval = 0.5, suffix = "x" }), "weapon_rapid_fire_mult")
-    bind(s:toggle({ name = "Extended Range", flag = "wx_range",   default = false }), "weapon_extended_range")
-    bind(s:toggle({ name = "Extended Melee", flag = "wx_melee",   default = false }), "weapon_extended_melee_range")
-    bind(s:slider({ name = "Melee Mult",     flag = "wx_melmult", min = 1, max = 10, default = 3, interval = 0.5, suffix = "x" }), "weapon_extended_melee_mult")
-
-    local s2 = colR:section({ name = "Hit Feedback", toggle = false })
-    bind(s2:toggle({ name = "Hit Sound",    flag = "hf_hit",   default = false }), "hit_sound_enabled")
-    bind(s2:slider({ name = "Hit Volume",   flag = "hf_hvol",  min = 0, max = 2, default = 1, interval = 0.05, suffix = "x" }), "hit_sound_volume")
-    bind(s2:toggle({ name = "Death Sound",  flag = "hf_death", default = false }), "death_sound_enabled")
-    bind(s2:slider({ name = "Death Volume", flag = "hf_dvol",  min = 0, max = 2, default = 1, interval = 0.05, suffix = "x" }), "death_sound_volume")
-    local hfx = s2:toggle({ name = "Hit Effect", flag = "hf_fx", default = false })
-    bind(hfx, "hit_effect_enabled")
-    bindColor(hfx:colorpicker({ flag = "hf_fxcol", color = State.colors.hit_effect }), "hit_effect")
+    local GroupHit = TabExploit:AddGroupbox("Hit Feedback")
+    bind(GroupHit:AddToggle("hf_hit",   { Text = "Hit Sound",    Default = false }), "hit_sound_enabled")
+    bind(GroupHit:AddSlider("hf_hvol",  { Text = "Hit Volume",   Default = 1, Min = 0, Max = 2, Rounding = 2 }), "hit_sound_volume")
+    bind(GroupHit:AddToggle("hf_death", { Text = "Death Sound",  Default = false }), "death_sound_enabled")
+    bind(GroupHit:AddSlider("hf_dvol",  { Text = "Death Volume", Default = 1, Min = 0, Max = 2, Rounding = 2 }), "death_sound_volume")
+    local hf_fx = GroupHit:AddToggle("hf_fx", { Text = "Hit Effect", Default = false })
+    bind(hf_fx, "hit_effect_enabled")
+    bindColor(hf_fx:AddColorPicker("hf_fxcol", { Default = State.colors.hit_effect }), "hit_effect")
 end
 
--- ── PLAYERS ───────────────────────────────────────────────────────────────────
 do
-    local colL = TabPlayers:column()
-    local colR = TabPlayers:column()
+    local GroupList = TabPlayers:AddGroupbox("Playerlist")
+    local pl_list = GroupList:AddLabel("Players")
 
-    local pl_sec  = colL:section({ name = "Playerlist", toggle = false })
-    local pl_list = pl_sec:list({ flag = "pl_selected" })
-
+    local player_names = {}
     task.spawn(function()
-        while library.gui and library.gui.Parent do
-            if pl_list and pl_list.refresh_options then
-                local self_player = players.LocalPlayer
-                local names = {}
-                for _, p in ipairs(players:GetPlayers()) do
-                    if p ~= self_player then table.insert(names, p.Name) end
-                end
-                pcall(function() pl_list.refresh_options(names) end)
+        while Library.Folder and Library.Folder.Parent do
+            local self_player = players.LocalPlayer
+            player_names = {}
+            for _, p in ipairs(players:GetPlayers()) do
+                if p ~= self_player then table.insert(player_names, p.Name) end
             end
             task.wait(3)
         end
     end)
 
-    local act_sec = colL:section({ name = "Actions", toggle = false })
+    local GroupActions = TabPlayers:AddGroupbox("Actions")
+    local pl_selected = nil
 
-    act_sec:button({ name = "Whitelist Toggle", callback = function()
-        local n = flags["pl_selected"]
-        if not n or n == "" then notify("No player selected") return end
-        whitelist[n] = not whitelist[n]
-        notify((whitelist[n] and "Whitelisted: " or "Unwhitelisted: ") .. n)
-    end })
+    GroupActions:AddButton({
+        Text = "Whitelist Toggle",
+        Func = function()
+            if not pl_selected or pl_selected == "" then notify("No player selected") return end
+            whitelist[pl_selected] = not whitelist[pl_selected]
+            notify((whitelist[pl_selected] and "Whitelisted: " or "Unwhitelisted: ") .. pl_selected)
+        end,
+    })
 
-    act_sec:button({ name = "Priority Toggle", callback = function()
-        local n = flags["pl_selected"]
-        if not n or n == "" then notify("No player selected") return end
-        priority_list[n] = not priority_list[n]
-        notify((priority_list[n] and "Priority set: " or "Priority removed: ") .. n)
-    end })
+    GroupActions:AddButton({
+        Text = "Priority Toggle",
+        Func = function()
+            if not pl_selected or pl_selected == "" then notify("No player selected") return end
+            priority_list[pl_selected] = not priority_list[pl_selected]
+            notify((priority_list[pl_selected] and "Priority set: " or "Priority removed: ") .. pl_selected)
+        end,
+    })
 
-    act_sec:button({ name = "Teleport To", callback = function()
-        local n = flags["pl_selected"]
-        if not n or n == "" then notify("No player selected") return end
-        local self_char = players.LocalPlayer.Character
-        local root = self_char and self_char:FindFirstChild("HumanoidRootPart")
-        if not root then notify("No character") return end
-        for _, inst in ipairs(game:GetService("Workspace"):GetChildren()) do
-            if inst.Name == "soldier_model" then
-                if inst:GetAttribute("Xenon_owner_name") == n then
-                    local hrp = inst:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        root.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
-                        notify("Teleported to " .. n)
-                        return
+    GroupActions:AddButton({
+        Text = "Teleport To",
+        Func = function()
+            if not pl_selected or pl_selected == "" then notify("No player selected") return end
+            local self_char = players.LocalPlayer.Character
+            local root = self_char and self_char:FindFirstChild("HumanoidRootPart")
+            if not root then notify("No character") return end
+            for _, inst in ipairs(game:GetService("Workspace"):GetChildren()) do
+                if inst.Name == "soldier_model" then
+                    if inst:GetAttribute("Xenon_owner_name") == pl_selected then
+                        local hrp = inst:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            root.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
+                            notify("Teleported to " .. pl_selected)
+                            return
+                        end
                     end
                 end
             end
-        end
-        notify("Could not find " .. n)
-    end })
+            notify("Could not find " .. pl_selected)
+        end,
+    })
 
-    act_sec:button({ name = "Kill", callback = function()
-        local n = flags["pl_selected"]
-        if not n or n == "" then notify("No player selected") return end
-        local self_char = players.LocalPlayer.Character
-        local root = self_char and self_char:FindFirstChild("HumanoidRootPart")
-        if not root then notify("No character") return end
-        for _, inst in ipairs(game:GetService("Workspace"):GetChildren()) do
-            if inst.Name == "soldier_model" then
-                if inst:GetAttribute("Xenon_owner_name") == n then
-                    local hrp = inst:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        root.CFrame = hrp.CFrame * CFrame.new(0, 1, 2)
-                        local prev = State.flags.auto_shoot_enabled
-                        State.flags.auto_shoot_enabled = true
-                        pcall(getgenv().Xenon_AimSync)
-                        task.delay(1.5, function()
-                            State.flags.auto_shoot_enabled = prev
+    GroupActions:AddButton({
+        Text = "Kill",
+        Func = function()
+            if not pl_selected or pl_selected == "" then notify("No player selected") return end
+            local self_char = players.LocalPlayer.Character
+            local root = self_char and self_char:FindFirstChild("HumanoidRootPart")
+            if not root then notify("No character") return end
+            for _, inst in ipairs(game:GetService("Workspace"):GetChildren()) do
+                if inst.Name == "soldier_model" then
+                    if inst:GetAttribute("Xenon_owner_name") == pl_selected then
+                        local hrp = inst:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            root.CFrame = hrp.CFrame * CFrame.new(0, 1, 2)
+                            local prev = State.flags.auto_shoot_enabled
+                            State.flags.auto_shoot_enabled = true
                             pcall(getgenv().Xenon_AimSync)
-                        end)
-                        notify("Killing " .. n)
-                        return
+                            task.delay(1.5, function()
+                                State.flags.auto_shoot_enabled = prev
+                                pcall(getgenv().Xenon_AimSync)
+                            end)
+                            notify("Killing " .. pl_selected)
+                            return
+                        end
                     end
                 end
             end
-        end
-        notify("Could not find " .. n)
-    end })
+            notify("Could not find " .. pl_selected)
+        end,
+    })
 
-    local wl_sec  = colR:section({ name = "Whitelist", toggle = false })
-    local wl_list = wl_sec:list({ flag = "wl_selected" })
-
-    wl_sec:button({ name = "Remove", callback = function()
-        local n = flags["wl_selected"]
-        if not n or n == "" then return end
-        whitelist[n] = nil
-        notify("Removed: " .. n)
-    end })
-
-    task.spawn(function()
-        while library.gui and library.gui.Parent do
-            if wl_list and wl_list.refresh_options then
-                local names = {}
-                for name in pairs(whitelist) do table.insert(names, name) end
-                pcall(function() wl_list.refresh_options(names) end)
+    local GroupWhitelist = TabPlayers:AddGroupbox("Whitelist")
+    GroupWhitelist:AddButton({
+        Text = "Refresh",
+        Func = function()
+            local wl_list = {}
+            for name in pairs(whitelist) do
+                table.insert(wl_list, name)
             end
-            task.wait(2)
-        end
-    end)
+        end,
+    })
 
     getgenv().Xenon_whitelist = whitelist
     getgenv().Xenon_priority  = priority_list
 end
 
--- ── CONFIG ────────────────────────────────────────────────────────────────────
 do
-    local colL = TabCfg:column()
-    local colR = TabCfg:column()
+    local GroupCfg = TabCfg:AddGroupbox("Configurations")
 
-    local cfg_sec  = colL:section({ name = "Configurations", toggle = false })
-    local cfg_list = cfg_sec:list({ flag = "cfg_sel" })
-    cfg_sec:textbox({ name = "Config Name", flag = "cfg_name", default = "" })
+    local cfg_selected = ""
+    GroupCfg:AddInput("cfg_name", { Text = "Config Name", Default = "" })
 
-    local cfg_dir = library.directory .. "/configs"
-    pcall(function() if not isfolder(cfg_dir) then makefolder(cfg_dir) end end)
-
+    local cfg_list = {}
     local function refresh_configs()
+        cfg_list = {}
+        local cfg_dir = Library.FolderName .. "/configs"
+        pcall(function() if not isfolder(cfg_dir) then makefolder(cfg_dir) end end)
         local ok, files = pcall(listfiles, cfg_dir)
-        if not ok or not files then return end
-        local names = {}
-        for _, f in ipairs(files) do
-            local n = f:match("([^/\\]+)%.cfg$")
-            if n then table.insert(names, n) end
-        end
-        if cfg_list and cfg_list.refresh_options then
-            pcall(function() cfg_list.refresh_options(names) end)
+        if ok and files then
+            for _, f in ipairs(files) do
+                local n = f:match("([^/\\]+)%.cfg$")
+                if n then table.insert(cfg_list, n) end
+            end
         end
     end
-
-    cfg_sec:button({ name = "Create", callback = function()
-        local n = flags["cfg_name"]
-        if not n or n == "" then notify("Enter a config name") return end
-        writefile(cfg_dir .. "/" .. n .. ".cfg", library:get_config())
-        refresh_configs()
-        notify("Created: " .. n)
-    end })
-
-    cfg_sec:button({ name = "Save", callback = function()
-        local n = flags["cfg_sel"]
-        if not n or n == "" then notify("Select a config") return end
-        writefile(cfg_dir .. "/" .. n .. ".cfg", library:get_config())
-        notify("Saved: " .. n)
-    end })
-
-    cfg_sec:button({ name = "Load", callback = function()
-        local n = flags["cfg_sel"]
-        if not n or n == "" then notify("Select a config") return end
-        local ok, data = pcall(readfile, cfg_dir .. "/" .. n .. ".cfg")
-        if ok and data then
-            library:load_config(data)
-            notify("Loaded: " .. n)
-        else
-            notify("Failed to load: " .. n)
-        end
-    end })
-
-    cfg_sec:button({ name = "Delete", callback = function()
-        local n = flags["cfg_sel"]
-        if not n or n == "" then notify("Select a config") return end
-        pcall(delfile, cfg_dir .. "/" .. n .. ".cfg")
-        refresh_configs()
-        notify("Deleted: " .. n)
-    end })
-
-    cfg_sec:button({ name = "Refresh", callback = refresh_configs })
     refresh_configs()
 
-    local ui_sec = colR:section({ name = "Interface", toggle = false })
-
-    ui_sec:colorpicker({ name = "Accent Color", flag = "ui_accent",
-        color = Color3.fromRGB(220, 50, 50),
-        callback = function(c) library:update_theme("accent", c) end,
+    GroupCfg:AddButton({
+        Text = "Create",
+        Func = function()
+            local cfg_name = Library.Flags.cfg_name or ""
+            if cfg_name == "" then notify("Enter a config name") return end
+            local cfg_dir = Library.FolderName .. "/configs"
+            pcall(function() if not isfolder(cfg_dir) then makefolder(cfg_dir) end end)
+            Library:AttemptSave()
+            notify("Created: " .. cfg_name)
+            refresh_configs()
+        end,
     })
 
-    local menu_visible = true
-    ui_sec:keybind({ name = "Toggle Menu", flag = "menu_keybind", callback = function()
-        menu_visible = not menu_visible
-        pcall(function() window.set_menu_visibility(menu_visible) end)
-    end })
+    GroupCfg:AddButton({
+        Text = "Save",
+        Func = function()
+            if cfg_selected == "" then notify("Select a config") return end
+            Library:AttemptSave()
+            notify("Saved: " .. cfg_selected)
+        end,
+    })
 
-    ui_sec:button({ name = "Unload", callback = function()
-        notify("Unloading xenon...")
-        task.delay(0.5, function()
-            pcall(getgenv().run_all_cleanup)
-            pcall(getgenv().Xenon_AimStop)
-            pcall(function()
-                if library.gui then library.gui:Destroy() end
+    GroupCfg:AddButton({
+        Text = "Load",
+        Func = function()
+            if cfg_selected == "" then notify("Select a config") return end
+            Library:LoadConfig(cfg_selected)
+            notify("Loaded: " .. cfg_selected)
+        end,
+    })
+
+    GroupCfg:AddButton({
+        Text = "Delete",
+        Func = function()
+            if cfg_selected == "" then notify("Select a config") return end
+            local cfg_dir = Library.FolderName .. "/configs"
+            pcall(delfile, cfg_dir .. "/" .. cfg_selected .. ".cfg")
+            notify("Deleted: " .. cfg_selected)
+            refresh_configs()
+        end,
+    })
+
+    GroupCfg:AddButton({
+        Text = "Refresh",
+        Func = refresh_configs,
+    })
+
+    local GroupUI = TabCfg:AddGroupbox("Interface")
+    local cp = GroupUI:AddToggle("ui_accent", { Text = "Accent Color", Default = false })
+    bindColor(cp:AddColorPicker("accent_picker", { Default = Color3.fromRGB(220, 50, 50) }), "ui_accent")
+
+    GroupUI:AddButton({
+        Text = "Unload",
+        Func = function()
+            notify("Unloading xenon...")
+            task.delay(0.5, function()
+                pcall(getgenv().run_all_cleanup)
+                pcall(getgenv().Xenon_AimStop)
             end)
-        end)
-    end })
+        end,
+    })
 end
 
--- set grenade helper on by default after flags initialise
 task.defer(function()
     State.flags.grenade_helper_enabled = true
     pcall(getgenv().Xenon_AimSync)
 end)
+
+Library:Init()
