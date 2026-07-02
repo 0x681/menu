@@ -28,22 +28,18 @@ local Tabs = {
 
 local function bind(elem, key, transform)
     if not elem then return elem end
-    local orig_cb = elem.Callback
-    elem.Callback = function(v)
+    elem:OnChanged(function(v)
         State.flags[key] = transform and transform(v) or v
-        if orig_cb then orig_cb(v) end
         pcall(getgenv().Xenon_AimSync)
-    end
+    end)
     return elem
 end
 
 local function bindColor(elem, key)
     if not elem then return elem end
-    local orig_cb = elem.Callback
-    elem.Callback = function(c)
+    elem:OnChanged(function(c)
         State.colors[key] = c
-        if orig_cb then orig_cb(c) end
-    end
+    end)
     return elem
 end
 
@@ -93,7 +89,7 @@ do
     bind(LeftGB:AddDropdown("sa_hitbox", {
         Values = { "Head", "HumanoidRootPart", "UpperTorso", "LowerTorso" },
         Default = 1,
-    }), "silent_aim_hitbox", function(v) return v end)
+    }), "silent_aim_hitbox", function(v) return ({Head="Head", HumanoidRootPart="HumanoidRootPart", UpperTorso="UpperTorso", LowerTorso="LowerTorso"})[v] or v end)
 
     local RightGB = Tabs.Aim:AddRightGroupbox("Combat")
     bind(RightGB:AddToggle("ka_on",    { Text = "Kill Aura",   Default = false }), "kill_aura_enabled")
@@ -108,7 +104,7 @@ do
     bind(LeftGB:AddDropdown("pc_mat", {
         Values = { "Neon", "Glass", "ForceField", "SmoothPlastic" },
         Default = 1,
-    }), "chams_material", function(v) return v end)
+    }), "chams_material", function(v) return ({Neon="Neon",Glass="Glass",ForceField="ForceField",SmoothPlastic="SmoothPlastic"})[v] or v end)
     bind(LeftGB:AddToggle("pc_rb",  { Text = "Rainbow",  Default = false }), "chams_rainbow")
     local pc_ecol = LeftGB:AddToggle("pc_ecol_on", { Text = "Enemy Color",    Default = false })
     bind(pc_ecol, "chams")
@@ -118,12 +114,12 @@ do
     bindColor(pc_fcol:AddColorPicker("pc_fcol", { Default = State.colors.chams_friendly }), "chams_friendly")
 
     local RightGB = Tabs.Chams:AddRightGroupbox("Viewmodel & Gun")
-    local GroupViewmodel = RightGB:AddLabel("Viewmodel Chams")
+    RightGB:AddLabel("Viewmodel Chams")
     bind(RightGB:AddToggle("vc_on",  { Text = "Enabled",  Default = false }), "viewmodel_chams")
     bind(RightGB:AddDropdown("vc_mat", {
         Values = { "Neon", "Glass", "ForceField", "SmoothPlastic" },
         Default = 1,
-    }), "viewmodel_chams_material", function(v) return v end)
+    }), "viewmodel_chams_material", function(v) return ({Neon="Neon",Glass="Glass",ForceField="ForceField",SmoothPlastic="SmoothPlastic"})[v] or v end)
     bind(RightGB:AddToggle("vc_rb",  { Text = "Rainbow",  Default = false }), "viewmodel_chams_rainbow")
     local vc_col = RightGB:AddToggle("vc_col_on", { Text = "Color", Default = false })
     bind(vc_col, "viewmodel_chams")
@@ -134,7 +130,7 @@ do
     bind(RightGB:AddDropdown("gc_mat", {
         Values = { "Neon", "Glass", "ForceField", "SmoothPlastic" },
         Default = 1,
-    }), "gun_material", function(v) return v end)
+    }), "gun_material", function(v) return ({Neon="Neon",Glass="Glass",ForceField="ForceField",SmoothPlastic="SmoothPlastic"})[v] or v end)
     bind(RightGB:AddToggle("gc_rb",  { Text = "Rainbow",  Default = false }), "gun_color_rainbow")
     local gc_col = RightGB:AddToggle("gc_col_on", { Text = "Color Override", Default = false })
     bind(gc_col, "gun_color_override")
@@ -150,14 +146,14 @@ do
     bind(LeftGB:AddDropdown("wc_mode", {
         Values = { "Fade", "Solid" },
         Default = 1,
-    }), "world_chams_mode", function(v) return v end)
+    }), "world_chams_mode", function(v) return ({Fade="Fade",Solid="Solid"})[v] or v end)
     bind(LeftGB:AddSlider("wc_range", { Text = "Range",        Default = 200, Min = 20, Max = 800, Rounding = 0 }), "world_chams_range")
     bind(LeftGB:AddSlider("wc_tr",    { Text = "Transparency", Default = 60,  Min = 0,  Max = 95,  Rounding = 0 }),
         "world_chams_transparency", function(v) return v / 100 end)
     bind(LeftGB:AddDropdown("wc_mat", {
         Values = { "Glass", "Neon", "ForceField", "SmoothPlastic" },
         Default = 1,
-    }), "world_chams_material", function(v) return v end)
+    }), "world_chams_material", function(v) return ({Glass="Glass",Neon="Neon",ForceField="ForceField",SmoothPlastic="SmoothPlastic"})[v] or v end)
     local wc_col = LeftGB:AddToggle("wc_col_on", { Text = "Color Override", Default = false })
     bind(wc_col, "world_chams_color_override")
     bindColor(wc_col:AddColorPicker("wc_col", { Default = State.colors.world_chams_color }), "world_chams_color")
@@ -182,7 +178,7 @@ do
     bind(LeftGB:AddDropdown("tr_mat", {
         Values = { "Neon", "Glass", "ForceField", "SmoothPlastic" },
         Default = 1,
-    }), "tracer_material", function(v) return v end)
+    }), "tracer_material", function(v) return ({Neon="Neon",Glass="Glass",ForceField="ForceField",SmoothPlastic="SmoothPlastic"})[v] or v end)
     bind(LeftGB:AddToggle("tr_rb",  { Text = "Rainbow",  Default = false }), "tracer_rainbow")
     local tr_col = LeftGB:AddToggle("tr_col_on", { Text = "Color", Default = false })
     bind(tr_col, "custom_tracers_enabled")
@@ -193,11 +189,11 @@ do
     bind(RightGB:AddDropdown("gh_cmode", {
         Values = { "Solid", "Rainbow" },
         Default = 1,
-    }), "grenade_color_mode", function(v) return v end)
+    }), "grenade_color_mode", function(v) return ({Solid="Solid",Rainbow="Rainbow"})[v] or v end)
     bind(RightGB:AddDropdown("gh_line", {
         Values = { "Solid", "Dashed" },
         Default = 1,
-    }), "grenade_line_style", function(v) return v end)
+    }), "grenade_line_style", function(v) return ({Solid="Solid",Dashed="Dashed"})[v] or v end)
     local gh_trail = RightGB:AddToggle("gh_tcol_on", { Text = "Trail Color",  Default = false })
     bind(gh_trail, "grenade_helper_enabled")
     bindColor(gh_trail:AddColorPicker("gh_tcol", { Default = State.colors.grenade_trail }), "grenade_trail")
